@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paddling the Allegheny</title>
+<meta name="description" content="Where to put in, where you may legally camp,
+what the water is doing right now, and who to call — the Allegheny River from
+Coudersport to Pittsburgh, by river mile.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+  integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
+  crossorigin="" referrerpolicy="no-referrer">
+<style>
+:root{
+  --ground:#f6f5f1; --panel:#fffefb; --ink:#1b2023; --ink2:#5f6a70;
+  --ink3:#8d979c; --rule:#dedbd3; --water:#2d6b7c; --ok:#3e7a4b;
+  --warn:#a6433b; --band:#e7e4dc;
+  --m-float:#2d6b7c; --m-wade:#bf8a2c; --m-drag:#a6433b;
+  --launch:#2f6f95; --camp:#3e7a4b; --hazard:#a6433b; --gage:#7a5aa0;
+  --trail:#3f6f86; --trail-soft:#a9c2cd; --trb:#8d6a86;
+  --cty-pa:#dcd8ce; --cty-ny:#cfd6d8;
+  --shadow:0 1px 2px rgba(20,25,30,.06),0 8px 24px rgba(20,25,30,.08);
+}
+@media (prefers-color-scheme:dark){:root{
+  --ground:#15181b; --panel:#1c2125; --ink:#e8e6e0; --ink2:#a3adb2;
+  --ink3:#6f797e; --rule:#2c3338; --water:#6ba8ba; --ok:#6aa878;
+  --warn:#d9756b; --band:#232a2f;
+  --m-float:#6ba8ba; --m-wade:#d9a441; --m-drag:#d9756b;
+  --launch:#6fa6c8; --camp:#6aa878; --hazard:#d9756b; --gage:#a98fd0;
+  --trail:#4d8098; --trail-soft:#33505e; --trb:#a4809c;
+  --cty-pa:#272d31; --cty-ny:#20292d;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.45);
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:16px;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px}
+a{color:var(--water)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+header{background:var(--panel);border-bottom:1px solid var(--rule);
+  padding-block:22px 18px}
+@media (max-width:640px){header{padding-block:16px 14px}
+  header p{font-size:14.5px}
+  section{padding-top:28px}}
+h1{font-size:clamp(23px,5.2vw,32px);margin:0 0 6px;letter-spacing:-.02em}
+header p{margin:0;color:var(--ink2);font-size:15px;max-width:62ch}
+
+/* ---------- map ---------- */
+.maprow{padding:14px 16px 0}
+.mapbox{position:relative;max-width:1180px;margin:0 auto;
+  border:1px solid var(--rule);border-radius:12px;overflow:hidden;
+  box-shadow:var(--shadow);background:var(--panel)}
+#map{height:min(70vh,660px);min-height:380px;width:100%;
+  background:var(--band);z-index:0}
+@media (max-width:640px){#map{height:64vh;min-height:340px}}
+.leaflet-container{font-family:"IBM Plex Sans",sans-serif;
+  background:var(--band)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);
+  color:var(--ink);box-shadow:var(--shadow)}
+.leaflet-popup-content{margin:12px 14px;line-height:1.5;font-size:13.5px}
+.leaflet-popup-content b{font-size:14.5px}
+.leaflet-bar a{background:var(--panel);color:var(--ink);
+  border-bottom-color:var(--rule)}
+.leaflet-bar a:hover{background:var(--band);color:var(--ink)}
+.leaflet-control-attribution{background:rgba(255,255,255,.78)!important;
+  color:var(--ink3)!important;font-size:10.5px}
+@media (prefers-color-scheme:dark){
+  .leaflet-control-attribution{background:rgba(20,24,27,.78)!important}
+  .leaflet-control-attribution a{color:var(--ink2)!important}}
+
+/* search + chips floating over the map */
+.mapui{position:absolute;inset:10px 10px auto 10px;z-index:500;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.searchwrap{position:relative;max-width:340px;pointer-events:auto}
+#q{width:100%;padding:10px 34px 10px 13px;border-radius:9px;
+  border:1px solid var(--rule);background:var(--panel);color:var(--ink);
+  font:inherit;font-size:14.5px;box-shadow:var(--shadow)}
+#q::placeholder{color:var(--ink3)}
+#qclear{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  border:0;background:none;color:var(--ink3);font-size:18px;cursor:pointer;
+  padding:4px 6px;line-height:1}
+#res{position:absolute;top:calc(100% + 5px);left:0;right:0;
+  background:var(--panel);border:1px solid var(--rule);border-radius:9px;
+  box-shadow:var(--shadow);max-height:46vh;overflow-y:auto;display:none}
+#res button{display:block;width:100%;text-align:left;border:0;
+  background:none;color:var(--ink);font:inherit;font-size:14px;
+  padding:9px 13px;cursor:pointer;border-bottom:1px solid var(--rule)}
+#res button:last-child{border-bottom:0}
+#res button:hover,#res button.on{background:var(--band)}
+#res .k{color:var(--ink3);font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.06em;margin-left:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;pointer-events:auto;
+  padding-right:48px}
+@media (max-width:700px){
+  .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto}
+  .mapui{inset:8px 8px auto 8px;gap:7px}
+  #q{padding:9px 32px 9px 12px;font-size:16px}
+  /* drop the zoom and locate buttons below the search and chip row */
+  .leaflet-top.leaflet-right{top:96px}
+}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;
+  border-radius:999px;border:1px solid var(--rule);background:var(--panel);
+  color:var(--ink2);font-size:12.5px;cursor:pointer;box-shadow:var(--shadow);
+  user-select:none}
+.chip[aria-pressed="true"]{color:var(--ink);border-color:var(--ink3)}
+.chip i{width:9px;height:9px;border-radius:50%;flex:0 0 9px;opacity:.28}
+.chip[aria-pressed="true"] i{opacity:1}
+.chip.line i{height:3px;border-radius:2px}
+.maphint{padding:9px 14px;border-top:1px solid var(--rule);
+  color:var(--ink3);font-size:12.5px;background:var(--panel)}
+</style>
+<style>
+/* ---------- page sections ---------- */
+section{padding-top:34px}
+h2{font-size:21px;margin:0 0 6px;letter-spacing:-.01em}
+h3{font-size:15.5px;margin:0 0 4px}
+.lede{color:var(--ink2);margin:0 0 14px;max-width:64ch}
+p,li{max-width:66ch}
+
+/* live flow */
+.flow{display:grid;gap:10px;
+  grid-template-columns:repeat(auto-fill,minmax(212px,1fr))}
+.g{background:var(--panel);border:1px solid var(--rule);border-radius:10px;
+  padding:12px 13px}
+.g .nm{font-size:13.5px;font-weight:500;line-height:1.35}
+.g .rm{color:var(--ink3);font-size:11.5px;
+  font-family:"IBM Plex Mono",monospace}
+.g .now{font-family:"IBM Plex Mono",monospace;font-size:22px;
+  margin:7px 0 1px;font-variant-numeric:tabular-nums}
+.g .now s{text-decoration:none;font-size:12px;color:var(--ink3)}
+.g .vs{font-size:12px;color:var(--ink2)}
+.g .pill{display:inline-block;margin-top:7px;padding:2px 8px;
+  border-radius:999px;font-size:11.5px;font-weight:500}
+.p-ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.p-lo{background:color-mix(in srgb,var(--m-wade) 20%,transparent);
+  color:var(--m-wade)}
+.p-hi{background:color-mix(in srgb,var(--warn) 16%,transparent);
+  color:var(--warn)}
+.p-na{background:var(--band);color:var(--ink3)}
+.flownote{color:var(--ink3);font-size:12.5px;margin-top:10px}
+
+/* cards */
+.cards{display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fill,minmax(236px,1fr))}
+.card{background:var(--panel);border:1px solid var(--rule);
+  border-radius:10px;padding:14px}
+.card p{margin:3px 0;font-size:13.5px}
+.card .rm{color:var(--ink2);font-size:12.5px}
+.card .q{color:var(--ink3);font-size:12px}
+.tel{font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:500}
+
+/* figure */
+figure{margin:18px 0 0}
+.figwrap{background:var(--panel);border:1px solid var(--rule);
+  border-radius:10px;padding:14px}
+.fig{display:block;width:100%;height:auto;overflow:visible}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:880px){.scrollx .strip{min-width:860px}}
+figcaption{color:var(--ink2);font-size:13px;margin-top:9px;padding-top:9px;
+  border-top:1px solid var(--rule)}
+.key{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:12.5px;
+  color:var(--ink2);margin:0 0 12px}
+.key span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.key i{width:14px;height:9px;border-radius:2px;border:1px solid var(--rule)}
+.strip text{font-family:"IBM Plex Sans",sans-serif}
+.strip .band-bg{fill:var(--band)}
+.strip .s-float{fill:var(--m-float)} .strip .s-wade{fill:var(--m-wade)}
+.strip .s-drag{fill:var(--m-drag)}
+.strip .s-camp{fill:var(--camp)} .strip .s-tribal{fill:var(--trb)}
+.strip .s-cty-pa{fill:var(--cty-pa)} .strip .s-cty-ny{fill:var(--cty-ny)}
+.strip .s-trail{fill:var(--trail)} .strip .s-trail-soft{fill:var(--trail-soft)}
+.strip .t-trail{font-size:9px;fill:#fff}
+.strip .t-nosteward{font-size:9px;fill:var(--ink3)}
+.strip .t-trail-out{font-size:9px;fill:var(--trail);font-weight:600}
+.strip .leader-t{stroke:var(--trail);stroke-width:1}
+.strip .t-lane{font-size:9px;letter-spacing:.09em;fill:var(--ink3);
+  font-weight:600}
+.strip .t-cty{font-size:9px;fill:var(--ink2)}
+.strip .t-strip-town{font-size:10px;fill:var(--ink2)}
+.strip .tick-town{stroke:var(--rule);stroke-width:1}
+.strip .b-dam{fill:var(--m-drag)} .strip .b-lock{fill:var(--ink3)}
+.strip .t-call2{font-size:9.5px;font-weight:600;fill:var(--ink2)}
+.strip .gapbar{stroke:var(--warn);stroke-width:2.2;stroke-linecap:round}
+.strip .t-gap{font-size:9.5px;fill:var(--warn);font-weight:600}
+.strip .axis{stroke:var(--ink3);stroke-width:.8}
+.strip .t-axis{font-size:9px;fill:var(--ink3);
+  font-family:"IBM Plex Mono",monospace}
+.strip .t-axis-lab{font-size:9.5px;fill:var(--ink3)}
+
+/* footer / the data */
+.data{margin-top:44px;border-top:1px solid var(--rule);
+  background:var(--panel)}
+.data .wrap{padding-block:26px 44px}
+.data h2{font-size:17px}
+.dl{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 16px}
+.btn{display:inline-flex;flex-direction:column;gap:1px;padding:11px 15px;
+  border-radius:8px;text-decoration:none;border:1px solid var(--rule);
+  background:var(--ground);color:var(--ink)}
+.btn b{font-size:14px;font-weight:600}
+.btn span{font-size:12px;color:var(--ink3)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:10px 0;
+  min-width:340px}
+th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--rule);
+  vertical-align:top}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink3);font-weight:600}
+td.n{text-align:right;font-family:"IBM Plex Mono",monospace;
+  white-space:nowrap}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;
+  background:var(--band);padding:1px 5px;border-radius:4px}
+.fine{color:var(--ink3);font-size:12.5px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Paddling the Allegheny</h1>
+  <p>Where to put in, where you may lawfully camp, what the water is doing
+  right now, and who to ring — from the source at Coudersport to the Point at
+  Pittsburgh, keyed to river mile.</p>
+</div></header>
+
+<div class="maprow"><div class="mapbox">
+  <div id="map"></div>
+  <div class="mapui">
+    <div class="searchwrap">
+      <input id="q" type="search" autocomplete="off" spellcheck="false"
+        placeholder="Search a town, launch or river mile…"
+        aria-label="Search a town, launch, campground or river mile">
+      <button id="qclear" hidden aria-label="Clear search">&times;</button>
+      <div id="res" role="listbox"></div>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="maphint">Tap anything for the detail. A green bank is one you
+  may lawfully camp on &mdash; everything else is private or barred.</div>
+</div></div>
+
+<main class="wrap">
+
+<section id="flow">
+  <h2>What the water is doing</h2>
+  <p class="lede">Live from the USGS gages on this river, fetched when you
+  opened the page, next to what this river normally runs on today's date.
+  Those medians come from decades of record and are baked in; the current
+  reading is not.</p>
+  <div class="flow" id="flowcards"></div>
+  <p class="flownote" id="flownote">Fetching current readings…</p>
+</section>
+
+<section id="strip">
+  <h2>The whole river on one line</h2>
+  <p class="lede">Every mile of it, from the source on the left to Pittsburgh
+  on the right.</p>
+  <figure class="figwrap">
+    <div class="key">
+      <span><i style="background:var(--m-float)"></i>Floatable in July</span>
+      <span><i style="background:var(--m-wade)"></i>Wadeable</span>
+      <span><i style="background:var(--m-drag)"></i>Too low to float</span>
+      <span><i style="background:var(--camp)"></i>Legal public camping</span>
+      <span><i style="background:var(--trb)"></i>Seneca Nation — ask the
+        Nation</span>
+      <span><i style="background:var(--band)"></i>No lawful public
+        campsite</span>
+      <span><i style="background:var(--trail)"></i>Designated water trail</span>
+      <span><i style="background:var(--trail-soft)"></i>Promoted reach</span>
+    </div>
+    <div class="scrollx"><svg class="fig strip" viewBox="0 0 1000 266" role="img" aria-label="The route as a single river-mile axis from river mile 312 at Coudersport to river mile 0 at Pittsburgh, banded by in-channel traverse mode, legal public camping and county.">
+<text class="t-strip-town" x="8.0" y="14" text-anchor="start">Coudersport</text>
+<line class="tick-town" x1="8.0" y1="19" x2="8.0" y2="62.0"/>
+<text class="t-strip-town" x="133.8" y="14" text-anchor="middle">Eldred</text>
+<line class="tick-town" x1="133.8" y1="19" x2="133.8" y2="62.0"/>
+<text class="t-strip-town" x="181.8" y="14" text-anchor="middle">Olean</text>
+<line class="tick-town" x1="181.8" y1="19" x2="181.8" y2="62.0"/>
+<text class="t-strip-town" x="255.3" y="14" text-anchor="middle">Salamanca</text>
+<line class="tick-town" x1="255.3" y1="19" x2="255.3" y2="62.0"/>
+<text class="t-strip-town" x="384.6" y="14" text-anchor="middle">Warren</text>
+<line class="tick-town" x1="384.6" y1="19" x2="384.6" y2="62.0"/>
+<text class="t-strip-town" x="505.5" y="14" text-anchor="middle">Tionesta</text>
+<line class="tick-town" x1="505.5" y1="19" x2="505.5" y2="62.0"/>
+<text class="t-strip-town" x="598.9" y="14" text-anchor="middle">Franklin</text>
+<line class="tick-town" x1="598.9" y1="19" x2="598.9" y2="62.0"/>
+<text class="t-strip-town" x="708.3" y="14" text-anchor="middle">Emlenton</text>
+<line class="tick-town" x1="708.3" y1="19" x2="708.3" y2="62.0"/>
+<text class="t-strip-town" x="847.1" y="14" text-anchor="middle">Kittanning</text>
+<line class="tick-town" x1="847.1" y1="19" x2="847.1" y2="62.0"/>
+<text class="t-strip-town" x="987.4" y="14" text-anchor="end">Pittsburgh</text>
+<line class="tick-town" x1="987.4" y1="19" x2="987.4" y2="62.0"/>
+<path class="b-lock" d="M970.9,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 2 (Highland Park) · RM 6.7</title></path>
+<path class="b-lock" d="M946.3,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 3 (Acmetonia) · RM 14.5</title></path>
+<path class="b-lock" d="M915.7,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 4 (Natrona) · RM 24.2</title></path>
+<path class="b-lock" d="M896.2,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 5 (Freeport) · RM 30.4</title></path>
+<path class="b-lock" d="M877.6,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 6 (Clinton) · RM 36.3</title></path>
+<path class="b-lock" d="M848.0,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 7 (Kittanning) · RM 45.7</title></path>
+<path class="b-lock" d="M826.2,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 8 (Templeton) · RM 52.6</title></path>
+<path class="b-lock" d="M796.0,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 9 (Rimer/Mosgrove) · RM 62.2</title></path>
+<path class="b-dam" d="M361.5,58.0 l-4,-7 l8,0 Z"><title>Kinzua Dam (Allegheny Reservoir) · RM 200.1</title></path>
+<text class="t-call2" x="354.5" y="54.0" text-anchor="end">Kinzua Dam · portage</text>
+<text class="t-call2" x="785.0" y="54.0" text-anchor="end">8 locks</text>
+<rect class="band-bg" x="8.0" y="62.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="57.0">IN-CHANNEL MODE</text>
+<rect class="s-drag" x="8.06" y="62.0" width="47.27" height="20.0"><title>RM 312.2–297.2 · below wading flow — carry</title></rect>
+<rect class="s-wade" x="55.34" y="62.0" width="58.31" height="20.0"><title>RM 297.2–278.7 · wadeable — too thin to float</title></rect>
+<rect class="s-float" x="113.64" y="62.0" width="877.73" height="20.0"><title>RM 278.7–0.2 · floatable at July median flow</title></rect>
+<rect class="band-bg" x="8.0" y="100.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="95.0">LEGAL PUBLIC CAMPING FROM THE WATER</text>
+<rect class="s-tribal" x="211.34" y="100.0" width="109.77" height="20.0"><title>Allegany Indian Territory — the Nation, not a state agency, is the authority</title></rect>
+<rect class="s-camp" x="15.09" y="100.0" width="0.70" height="20.0"><title>Susquehannock State Forest · State Forest</title></rect>
+<rect class="s-camp" x="363.06" y="100.0" width="11.35" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="375.26" y="100.0" width="3.31" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="382.67" y="100.0" width="2.36" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="403.65" y="100.0" width="4.66" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="409.61" y="100.0" width="10.24" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="415.44" y="100.0" width="4.41" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="417.40" y="100.0" width="0.70" height="20.0"><title>Cornplanter State Forest · State Forest</title></rect>
+<rect class="s-camp" x="421.34" y="100.0" width="5.33" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="421.71" y="100.0" width="4.95" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="427.42" y="100.0" width="8.10" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="431.26" y="100.0" width="2.68" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="437.85" y="100.0" width="2.58" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="442.33" y="100.0" width="2.68" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="445.10" y="100.0" width="2.58" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="447.97" y="100.0" width="0.70" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="451.69" y="100.0" width="8.45" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="453.95" y="100.0" width="4.07" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="461.83" y="100.0" width="4.57" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="467.16" y="100.0" width="9.27" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="476.68" y="100.0" width="1.48" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="478.35" y="100.0" width="0.85" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="481.44" y="100.0" width="0.85" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="490.20" y="100.0" width="16.55" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="491.52" y="100.0" width="3.62" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="498.05" y="100.0" width="5.14" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="506.74" y="100.0" width="1.20" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="632.15" y="100.0" width="20.33" height="20.0"><title>Clear Creek State Forest · State Forest</title></rect>
+<rect class="s-camp" x="634.61" y="100.0" width="1.95" height="20.0"><title>Clear Creek State Forest · State Forest</title></rect>
+<path class="gapbar" d="M15.7,126.0 L363.1,126.0"/>
+<text class="t-gap" x="189.4" y="137.0" text-anchor="middle">110 mi with none</text>
+<path class="gapbar" d="M652.5,126.0 L991.3,126.0"/>
+<text class="t-gap" x="821.9" y="137.0" text-anchor="middle">108 mi with none</text>
+<path class="gapbar" d="M507.9,126.0 L632.1,126.0"/>
+<text class="t-gap" x="570.0" y="137.0" text-anchor="middle">39 mi with none</text>
+<rect class="band-bg" x="8.0" y="158.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="153.0">WATER TRAIL — WHO STEWARDS THE REACH</text>
+<rect class="s-trail-soft" x="164.38" y="158.0" width="156.13" height="20.0"><title>Allegheny River paddling reach (Enchanted Mountains) · promoted route - not a designated water trail · stewarded by Cattaraugus County Tourism (Enchanted Mountains of Western New York) (716-938-2242) · RM 262.6–213.1</title></rect>
+<text class="t-trail" x="242.4" y="171.5" text-anchor="middle">Cattaraugus County Tourism</text>
+<rect class="s-trail" x="363.72" y="158.0" width="354.08" height="20.0"><title>Middle Allegheny River Water Trail · Pennsylvania-designated water trail · stewarded by USDA Forest Service - Allegheny National Forest (814-723-5150) · RM 199.3–87.0</title></rect>
+<text class="t-trail" x="540.8" y="171.5" text-anchor="middle">Allegheny National Forest</text>
+<rect class="s-trail" x="708.32" y="158.0" width="189.73" height="20.0"><title>Middle Allegheny River Water Trail - Armstrong extension · Pennsylvania-designated water trail (2018) · stewarded by Experience Armstrong, Inc. (724-543-4003) · RM 90.0–29.8</title></rect>
+<text class="t-trail" x="803.2" y="171.5" text-anchor="middle">Experience Armstrong</text>
+<rect class="s-trail" x="921.84" y="158.0" width="70.16" height="20.0"><title>Three Rivers Water Trail · Pennsylvania-designated water trail; National Recreation Trail · stewarded by Friends of the Riverfront (412-488-0212) · RM 22.3–0.0</title></rect>
+<text class="t-trail-out" x="992.0" y="153.0" text-anchor="end">Friends of the Riverfront</text>
+<line class="leader-t" x1="956.9" y1="155.0" x2="956.9" y2="158.0"/>
+<text class="t-nosteward" x="86.2" y="171.5" text-anchor="middle">no steward</text>
+<rect class="band-bg" x="8.0" y="196.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="191.0">COUNTY</text>
+<rect class="s-cty-pa" x="8.00" y="196.0" width="44.97" height="20.0"><title>Potter County, Pennsylvania · RM 312.2–297.9</title></rect>
+<text class="t-cty" x="30.5" y="209.5" text-anchor="middle">Potter</text>
+<rect class="s-cty-pa" x="52.97" y="196.0" width="102.43" height="20.0"><title>McKean County, Pennsylvania · RM 297.9–265.4</title></rect>
+<text class="t-cty" x="104.2" y="209.5" text-anchor="middle">McKean</text>
+<rect class="s-cty-ny" x="155.40" y="196.0" width="165.11" height="20.0"><title>Cattaraugus County, New York · RM 265.4–213.1</title></rect>
+<text class="t-cty" x="238.0" y="209.5" text-anchor="middle">Cattaraugus</text>
+<rect class="s-cty-pa" x="320.52" y="196.0" width="154.34" height="20.0"><title>Warren County, Pennsylvania · RM 213.1–164.1</title></rect>
+<text class="t-cty" x="397.7" y="209.5" text-anchor="middle">Warren</text>
+<rect class="s-cty-pa" x="474.85" y="196.0" width="45.32" height="20.0"><title>Forest County, Pennsylvania · RM 164.1–149.7</title></rect>
+<text class="t-cty" x="497.5" y="209.5" text-anchor="middle">Forest</text>
+<rect class="s-cty-pa" x="520.17" y="196.0" width="189.22" height="20.0"><title>Venango County, Pennsylvania · RM 149.7–89.7</title></rect>
+<text class="t-cty" x="614.8" y="209.5" text-anchor="middle">Venango</text>
+<rect class="s-cty-pa" x="709.39" y="196.0" width="80.71" height="20.0"><title>Clarion County, Pennsylvania · RM 89.7–64.1</title></rect>
+<text class="t-cty" x="749.8" y="209.5" text-anchor="middle">Clarion</text>
+<rect class="s-cty-pa" x="790.11" y="196.0" width="107.03" height="20.0"><title>Armstrong County, Pennsylvania · RM 64.1–30.1</title></rect>
+<text class="t-cty" x="843.6" y="209.5" text-anchor="middle">Armstrong</text>
+<rect class="s-cty-pa" x="897.14" y="196.0" width="38.32" height="20.0"><title>Westmoreland County, Pennsylvania · RM 30.1–17.9</title></rect>
+<rect class="s-cty-pa" x="906.81" y="196.0" width="85.19" height="20.0"><title>Allegheny County, Pennsylvania · RM 27.0–0.0</title></rect>
+<text class="t-cty" x="949.4" y="209.5" text-anchor="middle">Allegheny</text>
+<line class="axis" x1="8.0" y1="230.0" x2="992.0" y2="230.0"/>
+<line class="axis" x1="992.0" y1="230.0" x2="992.0" y2="234.0"/>
+<text class="t-axis" x="992.0" y="245.0" text-anchor="middle">0</text>
+<line class="axis" x1="913.2" y1="230.0" x2="913.2" y2="234.0"/>
+<text class="t-axis" x="913.2" y="245.0" text-anchor="middle">25</text>
+<line class="axis" x1="834.4" y1="230.0" x2="834.4" y2="234.0"/>
+<text class="t-axis" x="834.4" y="245.0" text-anchor="middle">50</text>
+<line class="axis" x1="755.6" y1="230.0" x2="755.6" y2="234.0"/>
+<text class="t-axis" x="755.6" y="245.0" text-anchor="middle">75</text>
+<line class="axis" x1="676.8" y1="230.0" x2="676.8" y2="234.0"/>
+<text class="t-axis" x="676.8" y="245.0" text-anchor="middle">100</text>
+<line class="axis" x1="598.0" y1="230.0" x2="598.0" y2="234.0"/>
+<text class="t-axis" x="598.0" y="245.0" text-anchor="middle">125</text>
+<line class="axis" x1="519.3" y1="230.0" x2="519.3" y2="234.0"/>
+<text class="t-axis" x="519.3" y="245.0" text-anchor="middle">150</text>
+<line class="axis" x1="440.5" y1="230.0" x2="440.5" y2="234.0"/>
+<text class="t-axis" x="440.5" y="245.0" text-anchor="middle">175</text>
+<line class="axis" x1="361.7" y1="230.0" x2="361.7" y2="234.0"/>
+<text class="t-axis" x="361.7" y="245.0" text-anchor="middle">200</text>
+<line class="axis" x1="282.9" y1="230.0" x2="282.9" y2="234.0"/>
+<text class="t-axis" x="282.9" y="245.0" text-anchor="middle">225</text>
+<line class="axis" x1="204.1" y1="230.0" x2="204.1" y2="234.0"/>
+<text class="t-axis" x="204.1" y="245.0" text-anchor="middle">250</text>
+<line class="axis" x1="125.3" y1="230.0" x2="125.3" y2="234.0"/>
+<text class="t-axis" x="125.3" y="245.0" text-anchor="middle">275</text>
+<line class="axis" x1="46.5" y1="230.0" x2="46.5" y2="234.0"/>
+<text class="t-axis" x="46.5" y="245.0" text-anchor="middle">300</text>
+<text class="t-axis-lab" x="992.0" y="258.0" text-anchor="end">river mile — 0.0 at the mouth, increasing upstream</text>
+</svg></div>
+    <figcaption>Scroll it sideways on a phone; hover any band on a desktop.
+    The camping band is the one that surprises people: about an eighth of this
+    river has legal public dispersed camping reachable from the water, and
+    three stretches over 25 miles have none at all.</figcaption>
+  </figure>
+</section>
+
+<section id="stewards">
+  <h2>Who to ring</h2>
+  <p class="lede">A water trail grants nobody a right of access. What it gives
+  you is a named body that signs the reach, keeps the launches open and will
+  pick up the phone about a closed one. Pennsylvania's published mapping
+  carries one of these four. <b>71 river miles have no steward at
+  all.</b></p>
+  <div class="cards">
+    <div class="card">
+      <h3>Cattaraugus County Tourism (Enchanted Mountains of Western New York)</h3>
+      <p class="rm">RM 263&ndash;213
+        &middot; 50 mi &middot; Allegheny River paddling reach (Enchanted Mountains)</p>
+      <p><a class="tel" href="tel:716-938-2242">716-938-2242</a></p>
+      <p class="q">207 Rock City Street, 2nd Floor, Little Valley, NY 14755</p>
+      <p><a href="https://enchantedmountains.com/paddling-allegheny-river" rel="noopener">Trail guide &rarr;</a></p>
+    </div>
+    <div class="card">
+      <h3>USDA Forest Service - Allegheny National Forest</h3>
+      <p class="rm">RM 199&ndash;87
+        &middot; 112 mi &middot; Middle Allegheny River Water Trail</p>
+      <p><a class="tel" href="tel:814-723-5150">814-723-5150</a></p>
+      <p class="q">4 Farm Colony Drive, Warren, PA 16365</p>
+      <p><a href="https://pfbc.pa.gov/watertrails/alleg/trailguide.htm" rel="noopener">Trail guide &rarr;</a></p>
+    </div>
+    <div class="card">
+      <h3>Experience Armstrong, Inc.</h3>
+      <p class="rm">RM 90&ndash;30
+        &middot; 60 mi &middot; Middle Allegheny River Water Trail - Armstrong extension</p>
+      <p><a class="tel" href="tel:724-543-4003">724-543-4003</a></p>
+      <p class="q">125 Market Street, Kittanning, PA 16201</p>
+      <p><a href="https://www.armstrongcounty.com" rel="noopener">Trail guide &rarr;</a></p>
+    </div>
+    <div class="card">
+      <h3>Friends of the Riverfront</h3>
+      <p class="rm">RM 22&ndash;0
+        &middot; 22 mi &middot; Three Rivers Water Trail</p>
+      <p><a class="tel" href="tel:412-488-0212">412-488-0212</a></p>
+      <p class="q">100 Hafner Avenue, Pittsburgh, PA 15223</p>
+      <p><a href="https://friendsoftheriverfront.org/three-rivers-water-trail/" rel="noopener">Trail guide &rarr;</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="know">
+  <h2>Three things to know before you go</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>The top of the river is a walk, not a paddle</h3>
+      <p>At July median flow, 34 of the first 42 miles below
+      Coudersport are below floating depth — you are walking them, in the
+      channel. The first public land where the river floats is State Game
+      Land 301 at RM 270.6. From there it is 279 miles of
+      paddling.</p>
+    </div>
+    <div class="card">
+      <h3>Kinzua Dam is a mandatory portage</h3>
+      <p>No lockage, no passage, RM 200 — carry around it. The eight Locks
+      &amp; Dams between RM 62 and the Point <em>do</em> lock recreational
+      craft through, free: signal the lockmaster and wait your turn behind
+      commercial traffic.</p>
+    </div>
+    <div class="card">
+      <h3>34 miles run through the Seneca Nation</h3>
+      <p>Between Salamanca and the state line the Allegany Territory is
+      sovereign ground. The Nation, not a state agency, is the authority on
+      access, camping and fishing there. Ask the Nation.</p>
+    </div>
+  </div>
+</section>
+
+<section id="gaps">
+  <h2>What is missing, and how to fix it</h2>
+  <p class="lede">This carries 14 public launches and 31
+  campgrounds within a mile of the water, taken from state and federal
+  mapping. <b>It is certainly incomplete.</b> Stewards and locals know
+  launches that appear on no map, and township and private accesses turn over
+  constantly. If you know one that is missing, or one on here that is gone,
+  say so — the fix takes minutes and everyone downstream benefits.</p>
+</section>
+
+</main>
+
+<div class="data"><div class="wrap">
+  <h2>The data underneath</h2>
+  <p class="fine">Everything above is drawn from one open dataset: 23 layers,
+  EPSG:4326, keyed to river mile 0.0 at the mouth increasing upstream — the
+  USACE Allegheny navigation convention. The centerline is the USGS NHDPlus
+  High Resolution mainstem, 652 flowlines on one level path, measured
+  geodesically; it validates against NHD's own mapped lock chambers to a mean
+  absolute deviation of 0.049 mile.</p>
+  <div class="dl">
+    <a class="btn" href="map.html"><b>Full atlas map</b>
+      <span>Every layer, toggled separately</span></a>
+    <a class="btn" href="allegheny_river_atlas.gpkg" download>
+      <b>GeoPackage</b><span>3.2 MB · opens in QGIS</span></a>
+    <a class="btn" href="DATA_DICTIONARY.md"><b>Data dictionary</b>
+      <span>Layers, fields, provenance</span></a>
+    <a class="btn" href="LICENSE.txt"><b>Licence</b>
+      <span>CC BY 4.0 compilation</span></a>
+  </div>
+  <p class="fine">Camping classifications are an interpretation of published
+  rules, not an agency determination. Flow bands are median estimates, not
+  forecasts. Owner names and mailing addresses from county assessment records
+  are not republished; parcel identifiers are, so anyone can make their own
+  enquiry through the county office.</p>
+  <p class="fine">Built 2026-09-18. Sources: USGS (NHDPlus HR, NWIS, 3DEP,
+  The National Map) · US EPA ATTAINS · USDA Forest Service · PA Fish &amp;
+  Boat Commission, PA DCNR and PA Game Commission via PASDA · NYSDEC ·
+  county assessment offices · OpenStreetMap contributors (ODbL) ·
+  basemap © OpenStreetMap contributors, © CARTO. Compilation released under
+  CC BY 4.0.</p>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
+  integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg=="
+  crossorigin="" referrerpolicy="no-referrer"></script>
+<script>
+const D={"meta":{"top_rm":312.22,"built":"2026-09-18","float_cfs":120.0,"wade_cfs":70.0,"trip_month":7},"river":[{"mode":"drag","hi":312.2,"lo":297.2,"pts":[[41.77286,-78.02029],[41.7714,-78.02397],[41.76773,-78.02624],[41.76355,-78.03268],[41.76117,-78.04375],[41.75892,-78.04364],[41.75785,-78.04554],[41.75732,-78.05349],[41.75119,-78.05389],[41.74811,-78.05652],[41.7489,-78.05804],[41.74759,-78.06092],[41.74916,-78.06798],[41.7448,-78.07065],[41.74072,-78.07576],[41.7402,-78.08762],[41.74358,-78.09048],[41.74679,-78.10183],[41.75133,-78.10741],[41.75451,-78.10783],[41.75698,-78.1156],[41.75971,-78.11494],[41.75997,-78.12006],[41.76393,-78.12315],[41.76381,-78.12654],[41.76758,-78.13087],[41.77214,-78.13201],[41.776,-78.13582],[41.77735,-78.1395],[41.77684,-78.14809],[41.77888,-78.14999],[41.77755,-78.15527],[41.77906,-78.16377],[41.78298,-78.1699],[41.785,-78.18037],[41.78659,-78.18108],[41.78694,-78.17908],[41.78865,-78.17945],[41.79127,-78.18525],[41.78981,-78.18821],[41.79097,-78.19289],[41.78353,-78.2018],[41.78307,-78.20484],[41.79058,-78.21096]]},{"mode":"wade","hi":297.2,"lo":278.7,"pts":[[41.79058,-78.21096],[41.79086,-78.21775],[41.78944,-78.22101],[41.79107,-78.22359],[41.78814,-78.22916],[41.78969,-78.23228],[41.78929,-78.23693],[41.78566,-78.24467],[41.7877,-78.24583],[41.78755,-78.24808],[41.79019,-78.25256],[41.79393,-78.2563],[41.79761,-78.26705],[41.8035,-78.27301],[41.8071,-78.2826],[41.80723,-78.28757],[41.81149,-78.28891],[41.81262,-78.29249],[41.81556,-78.2942],[41.81904,-78.29323],[41.82268,-78.2956],[41.82523,-78.29367],[41.82777,-78.29801],[41.82999,-78.2988],[41.82943,-78.3027],[41.83231,-78.30815],[41.83654,-78.30895],[41.83643,-78.31175],[41.83774,-78.31018],[41.83916,-78.31093],[41.83955,-78.30845],[41.84087,-78.31078],[41.8431,-78.30908],[41.84538,-78.31211],[41.84733,-78.31138],[41.84778,-78.31803],[41.8494,-78.31986],[41.85122,-78.31943],[41.85256,-78.32173],[41.85182,-78.3241],[41.85401,-78.32449],[41.85474,-78.32726],[41.85302,-78.32899],[41.85079,-78.32768],[41.85232,-78.3327],[41.85159,-78.33499],[41.86458,-78.34608],[41.8675,-78.34314],[41.86759,-78.34606],[41.87016,-78.34761],[41.86857,-78.34921],[41.87557,-78.35604],[41.87529,-78.3587],[41.87685,-78.36004],[41.87513,-78.36151],[41.87801,-78.36514],[41.88001,-78.36422],[41.88232,-78.36731],[41.88337,-78.36471],[41.8849,-78.36552],[41.88658,-78.36295],[41.89482,-78.3641],[41.89523,-78.37388],[41.89267,-78.3721],[41.8915,-78.37595],[41.8895,-78.37471],[41.88986,-78.37729],[41.89411,-78.37918]]},{"mode":"float","hi":278.7,"lo":0.2,"pts":[[41.89411,-78.37918],[41.9004,-78.38235],[41.90402,-78.38719],[41.90277,-78.38977],[41.90545,-78.39396],[41.9074,-78.39299],[41.90804,-78.38702],[41.9105,-78.38794],[41.90925,-78.39207],[41.91019,-78.39363],[41.91421,-78.38568],[41.91541,-78.38748],[41.91419,-78.39208],[41.93941,-78.37936],[41.94095,-78.3804],[41.9424,-78.38559],[41.94465,-78.38465],[41.94566,-78.38135],[41.94773,-78.38161],[41.94982,-78.38591],[41.94733,-78.38895],[41.94831,-78.39212],[41.95774,-78.39782],[41.9602,-78.39723],[41.96312,-78.38659],[41.967,-78.3854],[41.97308,-78.38672],[41.97752,-78.39537],[41.98322,-78.39579],[41.98849,-78.38141],[41.98954,-78.36576],[41.98711,-78.35508],[41.98874,-78.35106],[41.99747,-78.3515],[42.00109,-78.34945],[42.00474,-78.35115],[42.01012,-78.34482],[42.018,-78.34155],[42.02511,-78.34857],[42.03478,-78.34382],[42.04109,-78.34697],[42.0449,-78.35225],[42.04961,-78.35486],[42.05455,-78.36322],[42.05463,-78.37151],[42.06077,-78.38502],[42.06738,-78.3969],[42.07118,-78.40006],[42.06887,-78.41333],[42.07498,-78.42358],[42.07042,-78.42901],[42.07297,-78.44764],[42.07187,-78.45201],[42.0678,-78.45715],[42.0663,-78.47328],[42.07399,-78.48744],[42.089,-78.49793],[42.09434,-78.51253],[42.09889,-78.51962],[42.10645,-78.54526],[42.10609,-78.55244],[42.10071,-78.55866],[42.09645,-78.57112],[42.09085,-78.57669],[42.08842,-78.58187],[42.09162,-78.58669],[42.09162,-78.59325],[42.09414,-78.6003],[42.0923,-78.60955],[42.09458,-78.614],[42.09425,-78.62142],[42.09172,-78.62457],[42.08818,-78.61803],[42.08531,-78.6207],[42.08596,-78.63942],[42.0821,-78.64207],[42.08079,-78.64602],[42.08409,-78.64967],[42.09389,-78.65186],[42.10309,-78.66011],[42.11191,-78.65889],[42.1169,-78.66268],[42.13003,-78.66581],[42.13718,-78.66381],[42.14406,-78.66701],[42.14842,-78.67171],[42.15156,-78.67976],[42.14875,-78.68647],[42.15262,-78.69707],[42.15752,-78.72072],[42.16417,-78.73117],[42.16398,-78.73903],[42.15969,-78.75272],[42.16177,-78.77112],[42.15289,-78.78037],[42.14907,-78.77946],[42.14525,-78.77526],[42.14263,-78.77584],[42.1413,-78.77805],[42.14339,-78.78657],[42.14267,-78.79036],[42.12238,-78.79058],[42.11746,-78.80017],[42.10881,-78.81092],[42.10825,-78.81699],[42.10458,-78.82612],[42.10382,-78.83808],[42.10546,-78.85312],[42.1044,-78.85617],[42.10037,-78.86162],[42.09802,-78.86155],[42.09479,-78.86452],[42.08501,-78.87727],[42.07124,-78.88265],[42.0619,-78.89463],[42.05768,-78.89498],[42.05459,-78.89228],[42.04124,-78.89576],[42.03979,-78.90148],[42.04174,-78.90906],[42.03955,-78.93487],[42.03634,-78.94187],[42.02891,-78.94496],[42.02214,-78.95185],[42.01281,-78.95524],[42.00341,-78.95621],[41.99739,-78.95344],[41.99107,-78.94664],[41.98093,-78.94265],[41.97181,-78.93526],[41.94767,-78.93204],[41.92884,-78.9339],[41.92183,-78.94012],[41.91437,-78.9388],[41.90068,-78.94291],[41.89545,-78.94289],[41.8897,-78.94981],[41.87786,-78.95496],[41.86632,-78.96407],[41.85702,-78.98316],[41.85275,-78.98862],[41.84186,-78.99136],[41.83883,-78.994],[41.83709,-78.99705],[41.83722,-78.99961],[41.84145,-79.0086],[41.84769,-79.03383],[41.84847,-79.05182],[41.84431,-79.06802],[41.83516,-79.07522],[41.82959,-79.08311],[41.82828,-79.09634],[41.82357,-79.11741],[41.83173,-79.13395],[41.83886,-79.14529],[41.8445,-79.15139],[41.84413,-79.15678],[41.84154,-79.16073],[41.83216,-79.16209],[41.83003,-79.1671],[41.83664,-79.17843],[41.83652,-79.18377],[41.83309,-79.19256],[41.83657,-79.20175],[41.83447,-79.20965],[41.83893,-79.21888],[41.84018,-79.22554],[41.84294,-79.22767],[41.84609,-79.23625],[41.84631,-79.24087],[41.84435,-79.24848],[41.84125,-79.25343],[41.83481,-79.25596],[41.82961,-79.26243],[41.82564,-79.26475],[41.82271,-79.27191],[41.81931,-79.27517],[41.80165,-79.28197],[41.79654,-79.28592],[41.77784,-79.28596],[41.75994,-79.2927],[41.75266,-79.30004],[41.74761,-79.31433],[41.72502,-79.33078],[41.71122,-79.34998],[41.70236,-79.35231],[41.70037,-79.35557],[41.69251,-79.35934],[41.68582,-79.36708],[41.68339,-79.37435],[41.68106,-79.39019],[41.67923,-79.39369],[41.68122,-79.40508],[41.68072,-79.41282],[41.67707,-79.42074],[41.67456,-79.42166],[41.66987,-79.42022],[41.66588,-79.41832],[41.6599,-79.41129],[41.65436,-79.41201],[41.63994,-79.40419],[41.62695,-79.40389],[41.61061,-79.39951],[41.59719,-79.40294],[41.58774,-79.40926],[41.56892,-79.40573],[41.5646,-79.40795],[41.5578,-79.42309],[41.54489,-79.43883],[41.53409,-79.43775],[41.53243,-79.44022],[41.52139,-79.44384],[41.49861,-79.45984],[41.48878,-79.45988],[41.48448,-79.46175],[41.47479,-79.47233],[41.46916,-79.48404],[41.46907,-79.48899],[41.47436,-79.51144],[41.4748,-79.52455],[41.46896,-79.54289],[41.46938,-79.5477],[41.46749,-79.55747],[41.46433,-79.56073],[41.4514,-79.55855],[41.44913,-79.5605],[41.44664,-79.56635],[41.45147,-79.58001],[41.46428,-79.58965],[41.46692,-79.5943],[41.46558,-79.6004],[41.45797,-79.60604],[41.45386,-79.61146],[41.4532,-79.61441],[41.45508,-79.62163],[41.46746,-79.63988],[41.46785,-79.64504],[41.46284,-79.65033],[41.45695,-79.65115],[41.45273,-79.64766],[41.44749,-79.63903],[41.44045,-79.63864],[41.43697,-79.64244],[41.43489,-79.65618],[41.42856,-79.66999],[41.41559,-79.683],[41.41393,-79.68853],[41.41461,-79.69265],[41.42508,-79.69925],[41.42845,-79.70339],[41.43062,-79.70971],[41.42993,-79.71509],[41.42865,-79.72071],[41.4254,-79.72557],[41.40568,-79.73534],[41.40443,-79.74539],[41.41346,-79.76518],[41.41528,-79.77717],[41.40923,-79.78988],[41.40322,-79.79627],[41.39898,-79.80885],[41.39308,-79.81827],[41.38322,-79.81913],[41.37596,-79.81709],[41.36831,-79.79237],[41.36085,-79.78784],[41.34872,-79.78938],[41.34583,-79.7864],[41.34266,-79.77463],[41.33783,-79.77066],[41.33303,-79.7701],[41.32884,-79.77342],[41.3255,-79.78311],[41.32658,-79.79312],[41.32575,-79.8037],[41.33178,-79.82075],[41.33114,-79.82729],[41.32575,-79.84053],[41.31818,-79.85339],[41.31414,-79.85443],[41.30694,-79.84588],[41.30016,-79.84723],[41.29311,-79.85447],[41.28929,-79.85324],[41.28831,-79.84715],[41.29097,-79.83304],[41.2895,-79.82808],[41.28578,-79.82517],[41.28205,-79.82856],[41.28009,-79.83511],[41.27449,-79.84514],[41.26856,-79.84602],[41.26212,-79.83817],[41.26138,-79.83236],[41.2626,-79.82908],[41.27223,-79.82378],[41.27492,-79.82038],[41.27815,-79.80813],[41.27633,-79.79869],[41.27212,-79.79621],[41.26381,-79.79596],[41.25765,-79.79818],[41.25303,-79.79679],[41.24951,-79.79426],[41.24124,-79.78332],[41.22822,-79.7787],[41.22613,-79.77251],[41.23158,-79.76119],[41.23199,-79.75731],[41.2308,-79.75406],[41.22591,-79.75292],[41.21951,-79.75841],[41.21092,-79.7623],[41.20651,-79.7583],[41.20723,-79.75111],[41.21051,-79.74561],[41.21994,-79.74517],[41.2262,-79.74307],[41.23045,-79.73929],[41.23241,-79.73048],[41.22977,-79.72601],[41.22543,-79.72484],[41.22176,-79.72783],[41.21178,-79.72971],[41.2038,-79.71439],[41.19659,-79.70837],[41.19123,-79.71],[41.18408,-79.71952],[41.17968,-79.71914],[41.17635,-79.71402],[41.17584,-79.70129],[41.17272,-79.69254],[41.16098,-79.67906],[41.15593,-79.67917],[41.149,-79.68475],[41.14525,-79.68546],[41.13757,-79.67886],[41.13342,-79.67773],[41.0999,-79.67955],[41.09466,-79.67848],[41.08574,-79.67557],[41.07355,-79.6576],[41.06905,-79.65452],[41.06454,-79.6556],[41.05804,-79.66476],[41.05461,-79.66611],[41.04972,-79.66497],[41.04762,-79.66102],[41.04533,-79.64948],[41.03854,-79.63476],[41.03512,-79.62188],[41.03444,-79.6166],[41.03773,-79.60567],[41.03775,-79.60092],[41.03428,-79.59797],[41.02812,-79.59872],[41.02056,-79.60097],[41.01185,-79.60788],[41.00729,-79.60741],[41.00446,-79.58844],[40.99872,-79.58116],[40.99317,-79.58075],[40.9909,-79.58481],[40.99356,-79.60008],[40.99196,-79.61035],[40.9892,-79.61638],[40.98314,-79.62271],[40.97728,-79.62196],[40.97488,-79.61777],[40.97011,-79.59944],[40.96993,-79.59466],[40.97216,-79.5895],[40.98077,-79.58276],[40.98562,-79.57489],[40.98688,-79.56449],[40.98459,-79.55594],[40.98089,-79.55114],[40.97201,-79.54623],[40.96695,-79.54574],[40.95893,-79.54845],[40.9572,-79.54711],[40.94728,-79.54675],[40.94309,-79.544],[40.93825,-79.53608],[40.92917,-79.5156],[40.92147,-79.4947],[40.92181,-79.4908],[40.92441,-79.48706],[40.9341,-79.48581],[40.93851,-79.48249],[40.93993,-79.47722],[40.93856,-79.47036],[40.93451,-79.46497],[40.93062,-79.46297],[40.92092,-79.46543],[40.91214,-79.46353],[40.90735,-79.46435],[40.90075,-79.46884],[40.89284,-79.48354],[40.88978,-79.48612],[40.87379,-79.48051],[40.86844,-79.48114],[40.86348,-79.48424],[40.85821,-79.49288],[40.85574,-79.50211],[40.84727,-79.52271],[40.84057,-79.52957],[40.82987,-79.53126],[40.8214,-79.52975],[40.80758,-79.51783],[40.80312,-79.51568],[40.7858,-79.52372],[40.75573,-79.55034],[40.75113,-79.56169],[40.7487,-79.58072],[40.7467,-79.5864],[40.74496,-79.5878],[40.72966,-79.58712],[40.71622,-79.57894],[40.70598,-79.58262],[40.70326,-79.58873],[40.70202,-79.60292],[40.69434,-79.61791],[40.69161,-79.63026],[40.6908,-79.64027],[40.69454,-79.64718],[40.69396,-79.65644],[40.69033,-79.66242],[40.67981,-79.66877],[40.67283,-79.67567],[40.66898,-79.69038],[40.6668,-79.69418],[40.66141,-79.69564],[40.65132,-79.68992],[40.64409,-79.68887],[40.63451,-79.69465],[40.62507,-79.70394],[40.61694,-79.71565],[40.60808,-79.72135],[40.60151,-79.73807],[40.59584,-79.75814],[40.59154,-79.76476],[40.58392,-79.77228],[40.56986,-79.77441],[40.54704,-79.76389],[40.54074,-79.76645],[40.53647,-79.77221],[40.53453,-79.77988],[40.53715,-79.80316],[40.53678,-79.81862],[40.53314,-79.83454],[40.52908,-79.84333],[40.52539,-79.84853],[40.52082,-79.85008],[40.51313,-79.85044],[40.50343,-79.84847],[40.49446,-79.85079],[40.48633,-79.86082],[40.48347,-79.875],[40.48433,-79.89242],[40.48948,-79.91449],[40.49176,-79.93099],[40.49097,-79.93917],[40.48759,-79.95118],[40.48357,-79.95906],[40.46342,-79.97522],[40.45041,-79.9924],[40.44727,-79.99792],[40.4436,-80.01266]]}],"camp_ok":[{"name":"Susquehannock State Forest","desig":"State Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":309.97,"lo":309.79,"pts":[[41.75761,-78.05242],[41.75566,-78.05395]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":199.56,"lo":195.96,"pts":[[41.84147,-79.00875],[41.84833,-79.03691],[41.84881,-79.04731],[41.84618,-79.06365],[41.83953,-79.07187]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":195.69,"lo":194.64,"pts":[[41.83614,-79.07442],[41.82959,-79.08311],[41.82874,-79.091]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":193.34,"lo":192.59,"pts":[[41.82382,-79.11479],[41.82828,-79.12738]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":186.68,"lo":185.2,"pts":[[41.83531,-79.21172],[41.84537,-79.23493]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":184.79,"lo":181.54,"pts":[[41.84578,-79.24232],[41.84181,-79.2529],[41.83472,-79.25603],[41.82564,-79.26475],[41.82026,-79.27448],[41.81132,-79.27856]]},{"name":"Allegheny Islands Wilderness","desig":"Designated Wilderness","rule":"Primitive camping permitted in designated Wilderness; no facilities, strict Leave No Trace, island sites are small and flood-prone","hi":182.94,"lo":181.54,"pts":[[41.82687,-79.26407],[41.82026,-79.27448],[41.81132,-79.27856]]},{"name":"Cornplanter State Forest","desig":"State Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":182.32,"lo":182.23,"pts":[[41.82157,-79.27318],[41.82053,-79.27422]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":181.07,"lo":179.38,"pts":[[41.80482,-79.28093],[41.79633,-79.28597],[41.78182,-79.28555]]},{"name":"Allegheny Islands Wilderness","desig":"Designated Wilderness","rule":"Primitive camping permitted in designated Wilderness; no facilities, strict Leave No Trace, island sites are small and flood-prone","hi":180.95,"lo":179.38,"pts":[[41.80316,-79.28155],[41.79633,-79.28597],[41.78182,-79.28555]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":179.14,"lo":176.57,"pts":[[41.77839,-79.28591],[41.75706,-79.29505],[41.75244,-79.30048],[41.74941,-79.31014]]},{"name":"Allegheny Islands Wilderness","desig":"Designated Wilderness","rule":"Primitive camping permitted in designated Wilderness; no facilities, strict Leave No Trace, island sites are small and flood-prone","hi":177.92,"lo":177.07,"pts":[[41.76161,-79.292],[41.75211,-79.30124]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":175.83,"lo":175.01,"pts":[[41.74162,-79.3191],[41.73107,-79.32567]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":174.41,"lo":173.56,"pts":[[41.72393,-79.33204],[41.71564,-79.34383]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":173.53,"lo":172.71,"pts":[[41.71536,-79.34427],[41.71122,-79.34998],[41.70571,-79.35198]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":172.62,"lo":172.43,"pts":[[41.70442,-79.35194],[41.70184,-79.35277]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":171.44,"lo":168.76,"pts":[[41.69048,-79.36208],[41.68486,-79.36923],[41.67926,-79.39345],[41.68105,-79.4084]]},{"name":"Allegheny Islands Wilderness","desig":"Designated Wilderness","rule":"Primitive camping permitted in designated Wilderness; no facilities, strict Leave No Trace, island sites are small and flood-prone","hi":170.72,"lo":169.43,"pts":[[41.684,-79.37243],[41.67948,-79.39573]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":168.22,"lo":166.77,"pts":[[41.67841,-79.41798],[41.67605,-79.42142],[41.6714,-79.42088],[41.66127,-79.41245]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":166.53,"lo":163.59,"pts":[[41.6585,-79.41232],[41.63932,-79.40401],[41.61913,-79.40196]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":163.51,"lo":163.04,"pts":[[41.618,-79.40181],[41.61147,-79.40046]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":162.98,"lo":162.71,"pts":[[41.6108,-79.3998],[41.60704,-79.39953]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":162.0,"lo":161.73,"pts":[[41.59745,-79.40286],[41.59398,-79.40516]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":159.22,"lo":153.97,"pts":[[41.56229,-79.41312],[41.5578,-79.42309],[41.54489,-79.43883],[41.53422,-79.43769],[41.50022,-79.45834]]},{"name":"Allegheny Islands Wilderness","desig":"Designated Wilderness","rule":"Primitive camping permitted in designated Wilderness; no facilities, strict Leave No Trace, island sites are small and flood-prone","hi":158.8,"lo":157.65,"pts":[[41.5595,-79.42033],[41.54796,-79.436]]},{"name":"Allegheny Islands Wilderness","desig":"Designated Wilderness","rule":"Primitive camping permitted in designated Wilderness; no facilities, strict Leave No Trace, island sites are small and flood-prone","hi":156.73,"lo":155.1,"pts":[[41.53552,-79.43762],[41.51443,-79.44869]]},{"name":"Allegheny National Forest","desig":"National Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":153.97,"lo":153.59,"pts":[[41.50022,-79.45834],[41.49526,-79.46048]]},{"name":"Clear Creek State Forest","desig":"State Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":114.18,"lo":107.73,"pts":[[41.31602,-79.85484],[41.30694,-79.84588],[41.30016,-79.84723],[41.29311,-79.85447],[41.28929,-79.85324],[41.28831,-79.84715],[41.29115,-79.83451],[41.2895,-79.82808],[41.28638,-79.8253],[41.28273,-79.82744],[41.27661,-79.84227],[41.27254,-79.84639],[41.26528,-79.84305],[41.26139,-79.83494]]},{"name":"Clear Creek State Forest","desig":"State Forest","rule":"Dispersed camping permitted (ANF: free, no permit, 14-day limit; PA State Forest: free permit required beyond one night in one spot)","hi":113.4,"lo":112.78,"pts":[[41.30743,-79.84615],[41.29896,-79.84843]]}],"tribal":[{"name":"Allegany Indian Territory","hi":247.7,"lo":212.87,"pts":[[42.09587,-78.57201],[42.09085,-78.57669],[42.08839,-78.58211],[42.09162,-78.58669],[42.09162,-78.59325],[42.09414,-78.6003],[42.0923,-78.60955],[42.09458,-78.614],[42.09417,-78.6219],[42.09088,-78.62432],[42.0879,-78.61797],[42.08531,-78.6207],[42.08596,-78.63942],[42.08202,-78.64217],[42.08089,-78.64636],[42.08423,-78.64973],[42.09318,-78.65141],[42.10309,-78.66011],[42.11191,-78.65889],[42.1169,-78.66268],[42.13003,-78.66581],[42.13718,-78.66381],[42.14406,-78.66701],[42.14842,-78.67171],[42.15156,-78.67976],[42.14875,-78.68647],[42.15262,-78.69707],[42.15752,-78.72072],[42.16417,-78.73117],[42.16398,-78.73903],[42.15969,-78.75272],[42.16189,-78.77076],[42.15289,-78.78037],[42.14907,-78.77946],[42.14525,-78.77526],[42.14263,-78.77584],[42.1413,-78.77805],[42.14339,-78.78657],[42.1427,-78.79035],[42.13831,-78.79133],[42.12494,-78.78988],[42.12084,-78.79261],[42.11793,-78.79944],[42.10853,-78.81171],[42.10825,-78.81699],[42.10458,-78.82612],[42.10387,-78.83315],[42.10546,-78.85312],[42.10058,-78.86143],[42.09531,-78.86399],[42.08501,-78.87727],[42.07124,-78.88265],[42.0619,-78.89463],[42.05768,-78.89498],[42.05459,-78.89228],[42.04124,-78.89576],[42.03979,-78.90148],[42.04174,-78.90906],[42.03999,-78.92203],[42.0407,-78.93047],[42.03634,-78.94187],[42.02891,-78.94496],[42.02214,-78.95185],[42.01337,-78.9551],[42.00341,-78.95621],[41.9963,-78.95224]]}],"trails":[{"name":"Allegheny River paddling reach (Enchanted Mountains)","steward":"Cattaraugus County Tourism (Enchanted Mountains of Western New York)","phone":"716-938-2242","url":"https://enchantedmountains.com/paddling-allegheny-river","addr":"207 Rock City Street, 2nd Floor, Little Valley, NY 14755","status":"promoted route - not a designated water trail","designated":false,"hi":262.6,"lo":213.06,"mi":49.5,"pts":[[42.03485,-78.34386],[42.04128,-78.34711],[42.0446,-78.35197],[42.04977,-78.35511],[42.05455,-78.36322],[42.05463,-78.37151],[42.06077,-78.38502],[42.06738,-78.3969],[42.07118,-78.40006],[42.06887,-78.41333],[42.07498,-78.42358],[42.07042,-78.42901],[42.07294,-78.44797],[42.07187,-78.45201],[42.0678,-78.45715],[42.06611,-78.4726],[42.07399,-78.48744],[42.089,-78.49793],[42.09434,-78.51253],[42.09889,-78.51962],[42.10644,-78.54511],[42.10609,-78.55244],[42.10071,-78.55866],[42.09645,-78.57112],[42.09085,-78.57669],[42.08842,-78.58187],[42.09162,-78.58669],[42.09162,-78.59325],[42.09414,-78.6003],[42.0923,-78.60955],[42.09458,-78.614],[42.09425,-78.62142],[42.09172,-78.62457],[42.08818,-78.61803],[42.08531,-78.6207],[42.08596,-78.63942],[42.08202,-78.64217],[42.08089,-78.64636],[42.08423,-78.64973],[42.09318,-78.65141],[42.10309,-78.66011],[42.11191,-78.65889],[42.1169,-78.66268],[42.13003,-78.66581],[42.13649,-78.66365],[42.14345,-78.66661],[42.14727,-78.67018],[42.15155,-78.67961],[42.14885,-78.68699],[42.15262,-78.69707],[42.15787,-78.72189],[42.16385,-78.72978],[42.16398,-78.73903],[42.15969,-78.75272],[42.16204,-78.76883],[42.16132,-78.77192],[42.15285,-78.78038],[42.14907,-78.77946],[42.14525,-78.77526],[42.14263,-78.77584],[42.1413,-78.77805],[42.14339,-78.78657],[42.14267,-78.79036],[42.12238,-78.79058],[42.11746,-78.80017],[42.10881,-78.81092],[42.10825,-78.81699],[42.10413,-78.82976],[42.10546,-78.85312],[42.10098,-78.86095],[42.09505,-78.86425],[42.08501,-78.87727],[42.07124,-78.88265],[42.0619,-78.89463],[42.05768,-78.89498],[42.05459,-78.89228],[42.04124,-78.89576],[42.03979,-78.90148],[42.04174,-78.90906],[42.03999,-78.92203],[42.0407,-78.93047],[42.03634,-78.94187],[42.02891,-78.94496],[42.02214,-78.95185],[42.01337,-78.9551],[42.00341,-78.95621],[41.99863,-78.95404]]},{"name":"Middle Allegheny River Water Trail","steward":"USDA Forest Service - Allegheny National Forest","phone":"814-723-5150","url":"https://pfbc.pa.gov/watertrails/alleg/trailguide.htm","addr":"4 Farm Colony Drive, Warren, PA 16365","status":"Pennsylvania-designated water trail","designated":true,"hi":199.35,"lo":87.0,"mi":112.3,"pts":[[41.84234,-79.01259],[41.84836,-79.03705],[41.84844,-79.05206],[41.84431,-79.06802],[41.83516,-79.07522],[41.82959,-79.08311],[41.82828,-79.09634],[41.82357,-79.11741],[41.83173,-79.13395],[41.8446,-79.15206],[41.84408,-79.15691],[41.8414,-79.16088],[41.8323,-79.16202],[41.83004,-79.16602],[41.83677,-79.17944],[41.83651,-79.18381],[41.83309,-79.19256],[41.83657,-79.20175],[41.83447,-79.20965],[41.83893,-79.21888],[41.84018,-79.22554],[41.84294,-79.22767],[41.84621,-79.23691],[41.84631,-79.24087],[41.84324,-79.25073],[41.84021,-79.25427],[41.83472,-79.25603],[41.82961,-79.26243],[41.82564,-79.26475],[41.82271,-79.27191],[41.81931,-79.27517],[41.80165,-79.28197],[41.79654,-79.28592],[41.77784,-79.28596],[41.75994,-79.2927],[41.75266,-79.30004],[41.74761,-79.31433],[41.72502,-79.33078],[41.71122,-79.34998],[41.70236,-79.35231],[41.70037,-79.35557],[41.69251,-79.35934],[41.68582,-79.36708],[41.68339,-79.37435],[41.68106,-79.39019],[41.67923,-79.39369],[41.68122,-79.40508],[41.68072,-79.41282],[41.67645,-79.42121],[41.66588,-79.41832],[41.65976,-79.41122],[41.65444,-79.41204],[41.63994,-79.40419],[41.62695,-79.40389],[41.61061,-79.39951],[41.59719,-79.40294],[41.58774,-79.40926],[41.58261,-79.40938],[41.57569,-79.4062],[41.56959,-79.40557],[41.56465,-79.40788],[41.5578,-79.42309],[41.54489,-79.43883],[41.53422,-79.43769],[41.53243,-79.44022],[41.52139,-79.44384],[41.49861,-79.45984],[41.48864,-79.45991],[41.47958,-79.46621],[41.47412,-79.47334],[41.46916,-79.48404],[41.46907,-79.48899],[41.47436,-79.51144],[41.4748,-79.52455],[41.46896,-79.54289],[41.46938,-79.5477],[41.46749,-79.55747],[41.46433,-79.56073],[41.4514,-79.55855],[41.44913,-79.5605],[41.44664,-79.56635],[41.45147,-79.58001],[41.46428,-79.58965],[41.46692,-79.5943],[41.46558,-79.6004],[41.45797,-79.60604],[41.45386,-79.61146],[41.4532,-79.61441],[41.45508,-79.62163],[41.46746,-79.63988],[41.46773,-79.64554],[41.46284,-79.65033],[41.45695,-79.65115],[41.45273,-79.64766],[41.44749,-79.63903],[41.44045,-79.63864],[41.43697,-79.64244],[41.43489,-79.65618],[41.42856,-79.66999],[41.41559,-79.683],[41.41393,-79.68853],[41.41461,-79.69265],[41.42508,-79.69925],[41.42845,-79.70339],[41.43062,-79.70971],[41.42993,-79.71509],[41.42865,-79.72071],[41.4254,-79.72557],[41.40568,-79.73534],[41.40443,-79.74539],[41.41346,-79.76518],[41.41528,-79.77717],[41.40923,-79.78988],[41.40322,-79.79627],[41.39898,-79.80885],[41.39308,-79.81827],[41.38322,-79.81913],[41.37596,-79.81709],[41.36831,-79.79237],[41.36085,-79.78784],[41.34872,-79.78938],[41.34583,-79.7864],[41.34266,-79.77463],[41.33783,-79.77066],[41.33303,-79.7701],[41.32884,-79.77342],[41.3255,-79.78311],[41.32658,-79.79312],[41.32575,-79.8037],[41.33178,-79.82075],[41.33114,-79.82729],[41.32575,-79.84053],[41.31818,-79.85339],[41.31414,-79.85443],[41.30694,-79.84588],[41.30016,-79.84723],[41.29311,-79.85447],[41.28929,-79.85324],[41.28831,-79.84715],[41.29097,-79.83304],[41.2895,-79.82808],[41.28578,-79.82517],[41.28205,-79.82856],[41.28009,-79.83511],[41.27449,-79.84514],[41.26919,-79.84638],[41.263,-79.83981],[41.26138,-79.83236],[41.2626,-79.82908],[41.27223,-79.82378],[41.27492,-79.82038],[41.27815,-79.80813],[41.27633,-79.79869],[41.27212,-79.79621],[41.26381,-79.79596],[41.25765,-79.79818],[41.25303,-79.79679],[41.24951,-79.79426],[41.24124,-79.78332],[41.22822,-79.7787],[41.22613,-79.77251],[41.23158,-79.76119],[41.23199,-79.75731],[41.2308,-79.75406],[41.22591,-79.75292],[41.21951,-79.75841],[41.21092,-79.7623],[41.20651,-79.7583],[41.20723,-79.75111],[41.21051,-79.74561],[41.21994,-79.74517],[41.2262,-79.74307],[41.23045,-79.73929],[41.23239,-79.7336],[41.23088,-79.727],[41.22543,-79.72484],[41.22176,-79.72783],[41.21178,-79.72971],[41.2038,-79.71439],[41.19659,-79.70837],[41.19123,-79.71],[41.18408,-79.71952],[41.17972,-79.71916],[41.17635,-79.71402],[41.17584,-79.70129],[41.17281,-79.69275],[41.16344,-79.68056],[41.15638,-79.67901],[41.14606,-79.68539]]},{"name":"Middle Allegheny River Water Trail - Armstrong extension","steward":"Experience Armstrong, Inc.","phone":"724-543-4003","url":"https://www.armstrongcounty.com","addr":"125 Market Street, Kittanning, PA 16201","status":"Pennsylvania-designated water trail (2018)","designated":true,"hi":90.01,"lo":29.81,"mi":60.2,"pts":[[41.17553,-79.70688],[41.17584,-79.70124],[41.17244,-79.69199],[41.16098,-79.67906],[41.15593,-79.67917],[41.149,-79.68475],[41.14525,-79.68546],[41.13757,-79.67886],[41.13342,-79.67773],[41.0999,-79.67955],[41.09466,-79.67848],[41.08574,-79.67557],[41.07355,-79.6576],[41.06905,-79.65452],[41.06454,-79.6556],[41.05804,-79.66476],[41.05461,-79.66611],[41.04972,-79.66497],[41.04762,-79.66102],[41.04533,-79.64948],[41.03854,-79.63476],[41.03512,-79.62188],[41.03444,-79.6166],[41.03773,-79.60567],[41.03775,-79.60092],[41.03428,-79.59797],[41.02812,-79.59872],[41.02056,-79.60097],[41.01185,-79.60788],[41.00729,-79.60741],[41.00446,-79.58844],[40.99872,-79.58116],[40.99317,-79.58075],[40.9909,-79.58481],[40.99356,-79.60008],[40.99196,-79.61035],[40.9892,-79.61638],[40.98314,-79.62271],[40.97728,-79.62196],[40.97488,-79.61777],[40.97011,-79.59944],[40.97022,-79.59252],[40.98077,-79.58276],[40.98502,-79.57635],[40.98688,-79.56734],[40.9864,-79.56088],[40.98235,-79.55255],[40.97506,-79.54722],[40.96695,-79.54574],[40.95893,-79.54845],[40.9572,-79.54711],[40.95251,-79.54787],[40.94589,-79.54613],[40.9412,-79.54161],[40.92917,-79.5156],[40.92147,-79.4947],[40.92181,-79.4908],[40.92441,-79.48706],[40.93519,-79.48542],[40.93851,-79.48249],[40.93986,-79.47871],[40.93932,-79.47249],[40.93731,-79.46818],[40.93062,-79.46297],[40.92339,-79.46525],[40.91214,-79.46353],[40.90468,-79.46529],[40.89812,-79.47214],[40.89284,-79.48354],[40.88978,-79.48612],[40.87379,-79.48051],[40.86499,-79.48283],[40.85821,-79.49288],[40.85574,-79.50211],[40.84727,-79.52271],[40.84057,-79.52957],[40.82987,-79.53126],[40.8214,-79.52975],[40.80758,-79.51783],[40.80312,-79.51568],[40.7858,-79.52372],[40.75573,-79.55034],[40.75113,-79.56169],[40.7487,-79.58072],[40.7467,-79.5864],[40.74496,-79.5878],[40.72966,-79.58712],[40.71622,-79.57894],[40.70598,-79.58262],[40.70326,-79.58873],[40.70202,-79.60292],[40.69434,-79.61791],[40.69161,-79.63026],[40.6908,-79.64027],[40.69454,-79.64718],[40.69396,-79.65644],[40.69033,-79.66242],[40.67641,-79.6718]]},{"name":"Three Rivers Water Trail","steward":"Friends of the Riverfront","phone":"412-488-0212","url":"https://friendsoftheriverfront.org/three-rivers-water-trail/","addr":"100 Hafner Avenue, Pittsburgh, PA 15223","status":"Pennsylvania-designated water trail; National Recreation Trail","designated":true,"hi":22.26,"lo":0.0,"mi":22.3,"pts":[[40.59991,-79.74599],[40.59363,-79.76192],[40.58392,-79.77228],[40.56986,-79.77441],[40.54494,-79.76385],[40.54074,-79.76645],[40.53647,-79.77221],[40.5344,-79.78382],[40.53715,-79.80316],[40.53701,-79.8153],[40.53314,-79.83454],[40.52539,-79.84853],[40.51708,-79.85071],[40.50007,-79.84896],[40.49446,-79.85079],[40.48633,-79.86082],[40.48347,-79.875],[40.48433,-79.89242],[40.48948,-79.91449],[40.49176,-79.93099],[40.48856,-79.94805],[40.48357,-79.95906],[40.46342,-79.97522],[40.45041,-79.9924],[40.4466,-80.0],[40.44299,-80.0164]]}],"tgaps":[{"hi":312.22,"lo":262.6,"mi":49.6},{"hi":213.06,"lo":199.35,"mi":13.7},{"hi":29.81,"lo":22.26,"mi":7.5}],"launches":[{"lat":41.8388,"lon":-79.21477,"name":"Starbrick Access","agency":"PA Fish & Boat Commission","rm":186.41,"ramp":"Public Recreation Fishing And Boating","state":"PA"},{"lat":41.68351,"lon":-79.37017,"name":"Tidioute Access","agency":"PA Fish & Boat Commission","rm":170.82,"ramp":"Public Recreation Fishing And Boating","state":"PA"},{"lat":41.68201,"lon":-79.41062,"name":"Tidioute Borough","agency":"PA Fish & Boat Commission","rm":168.64,"ramp":"Y","state":"PA"},{"lat":41.56887,"lon":-79.40407,"name":"West Hickory Access","agency":"PA Fish & Boat Commission","rm":159.87,"ramp":"Public Recreation Fishing And Boating","state":"PA"},{"lat":41.5082,"lon":-79.45132,"name":"Tionesta","agency":"PA Fish & Boat Commission","rm":154.66,"ramp":"N","state":"PA"},{"lat":41.47599,"lon":-79.5121,"name":"President Access","agency":"PA Fish & Boat Commission","rm":149.7,"ramp":"Public Recreation Fishing Only","state":"PA"},{"lat":41.32189,"lon":-79.84984,"name":"Fisherman's Cove","agency":"PA Fish & Boat Commission","rm":114.66,"ramp":"Y","state":"PA"},{"lat":41.27729,"lon":-79.83747,"name":"Kennerdell Access","agency":"PA Fish & Boat Commission","rm":109.4,"ramp":" ","state":"PA"},{"lat":40.99279,"lon":-79.61139,"name":"Brady's Bend","agency":"PA Fish & Boat Commission","rm":69.85,"ramp":"Y","state":"PA"},{"lat":40.99252,"lon":-79.61275,"name":"Bradys Bend Access","agency":"PA Fish & Boat Commission","rm":69.79,"ramp":"Public Recreation Fishing And Boating","state":"PA"},{"lat":40.91946,"lon":-79.46333,"name":"Templeton","agency":"PA Fish & Boat Commission","rm":54.62,"ramp":"Y","state":"PA"},{"lat":40.84973,"lon":-79.50806,"name":"Cowanshannock","agency":"PA Fish & Boat Commission","rm":48.57,"ramp":"Y","state":"PA"},{"lat":40.74956,"lon":-79.55368,"name":"Rosston Access","agency":"PA Fish & Boat Commission","rm":40.21,"ramp":"Public Recreation Fishing And Boating","state":"PA"},{"lat":40.53502,"lon":-79.84113,"name":"Deer Creek Access","agency":"PA Fish & Boat Commission","rm":13.3,"ramp":"Public Recreation Fishing And Boating","state":"PA"}],"camps":[{"lat":42.05456,"lon":-78.90055,"name":"Highbanks Campground","rm":219.53,"off":556.8,"op":"unspecified","kind":"Campground"},{"lat":42.02883,"lon":-78.96465,"name":"East Camping Area","rm":214.74,"off":1291.0,"op":"unspecified","kind":"Campground"},{"lat":41.99556,"lon":-78.96306,"name":"WEBBS FERRY BOAT LAUNCH","rm":213.01,"off":806.0,"op":"USDA Forest Service","kind":"BOATING SITE"},{"lat":41.96214,"lon":-78.94309,"name":"Hooks Brook Boat Access Campground","rm":210.4,"off":697.6,"op":"unspecified","kind":"Campground"},{"lat":41.96223,"lon":-78.94306,"name":"HOOKS BROOK BOAT TO","rm":210.4,"off":691.8,"op":"unspecified","kind":"Campground"},{"lat":41.96202,"lon":-78.91822,"name":"NCT-TRACY RUN NORTH SHELTER","rm":210.1,"off":1246.3,"op":"USDA Forest Service","kind":"CAMPGROUND"},{"lat":41.95979,"lon":-78.92166,"name":"Tracy Run Campsites","rm":210.07,"off":945.3,"op":"unspecified","kind":"Campground"},{"lat":41.9288,"lon":-78.9214,"name":"Johnnycake Run Campsite","rm":208.0,"off":1023.1,"op":"unspecified","kind":"Campground"},{"lat":41.92251,"lon":-78.93084,"name":"HANDSOME LAKE BOAT TO","rm":207.67,"off":578.3,"op":"unspecified","kind":"Campground"},{"lat":41.92232,"lon":-78.93041,"name":"Handsome Lake Boat Access Campground","rm":207.67,"off":618.6,"op":"unspecified","kind":"Campground"},{"lat":41.93029,"lon":-78.95306,"name":"CAMP OLMSTED","rm":207.48,"off":1395.5,"op":"USDA Forest Service","kind":"ORGANIZATION SITE"},{"lat":41.92223,"lon":-78.94723,"name":"ROPER HOLLOW BOAT LAUNCH","rm":207.31,"off":586.5,"op":"USDA Forest Service","kind":"BOATING SITE"},{"lat":41.91251,"lon":-78.93278,"name":"HOPEWELL BOAT TO","rm":206.71,"off":526.2,"op":"unspecified","kind":"Campground"},{"lat":41.91252,"lon":-78.93279,"name":"Hopewell Boat Access Campground","rm":206.71,"off":524.9,"op":"unspecified","kind":"Campground"},{"lat":41.87418,"lon":-78.94667,"name":"PINE GROVE BOAT TO","rm":204.05,"off":797.8,"op":"unspecified","kind":"Campground"},{"lat":41.86813,"lon":-78.95441,"name":"Old State Road Campground","rm":203.45,"off":633.3,"op":"unspecified","kind":"Campground"},{"lat":41.85918,"lon":-78.96361,"name":"KINZUA POINT INFORMATION","rm":202.86,"off":744.2,"op":"USDA Forest Service","kind":"OBSERVATION SITE"},{"lat":41.84695,"lon":-78.98167,"name":"JAKES ROCKS","rm":201.24,"off":745.2,"op":"USDA Forest Service","kind":"TRAILHEAD"},{"lat":41.81529,"lon":-79.11195,"name":"WARREN ARCHERY CLUB","rm":193.4,"off":980.1,"op":"USDA Forest Service","kind":"ORGANIZATION SITE"},{"lat":41.83695,"lon":-79.22723,"name":"BIRDSALL EDEY GIRL SCOUT CAMP","rm":185.85,"off":387.4,"op":"USDA Forest Service","kind":"ORGANIZATION SITE"},{"lat":41.8389,"lon":-79.25723,"name":"BUCKALOONS REC AREA","rm":183.91,"off":189.2,"op":"unspecified","kind":"Campground"},{"lat":41.67584,"lon":-79.39361,"name":"TIDIOUTE OVERLOOK","rm":169.53,"off":378.9,"op":"USDA Forest Service","kind":"OBSERVATION SITE"},{"lat":41.61685,"lon":-79.39634,"name":"HALL ESTATE","rm":163.35,"off":383.8,"op":"USDA Forest Service","kind":"WILDLIFE VIEWING SITE"},{"lat":41.48044,"lon":-79.44613,"name":"Tionesta Recreation Area Campground","rm":152.87,"off":1368.9,"op":"unspecified","kind":"Campground"},{"lat":41.44855,"lon":-79.56093,"name":"Hemlock Point Campground","rm":145.78,"off":40.3,"op":"unspecified","kind":"Campground"},{"lat":41.32864,"lon":-79.85583,"name":"(unnamed campsite)","rm":114.75,"off":1013.2,"op":"unspecified","kind":"Campground"},{"lat":41.28344,"lon":-79.82828,"name":"Danner Campground","rm":110.05,"off":105.6,"op":"unspecified","kind":"Campground"},{"lat":41.25764,"lon":-79.83803,"name":"Marlowe's Scenic River Campground","rm":107.84,"off":448.6,"op":"unspecified","kind":"Campground"},{"lat":41.26557,"lon":-79.79772,"name":"Copperhead Retreat","rm":104.42,"off":139.7,"op":"unspecified","kind":"Campground"},{"lat":41.22765,"lon":-79.72697,"name":"All Saints Camp","rm":94.94,"off":152.2,"op":"unspecified","kind":"Campground"},{"lat":40.95008,"lon":-79.54931,"name":"(unnamed campsite)","rm":61.82,"off":169.5,"op":"private/commercial","kind":"Caravan site"}],"barriers":[{"lat":41.8386,"lon":-79.0011,"name":"Kinzua Dam (Allegheny Reservoir)","rm":200.05,"kind":"dam_portage","transit":"mandatory portage - no lockage, no passage","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.95539,"lon":-79.54714,"name":"Allegheny L/D 9 (Rimer/Mosgrove)","rm":62.2,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.89534,"lon":-79.47902,"name":"Allegheny L/D 8 (Templeton)","rm":52.6,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.81905,"lon":-79.52834,"name":"Allegheny L/D 7 (Kittanning)","rm":45.7,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.71603,"lon":-79.57893,"name":"Allegheny L/D 6 (Clinton)","rm":36.3,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.68352,"lon":-79.66673,"name":"Allegheny L/D 5 (Freeport)","rm":30.4,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.61425,"lon":-79.71722,"name":"Allegheny L/D 4 (Natrona)","rm":24.2,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.53686,"lon":-79.81757,"name":"Allegheny L/D 3 (Acmetonia)","rm":14.5,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"},{"lat":40.48975,"lon":-79.91622,"name":"Allegheny L/D 2 (Highland Park)","rm":6.7,"kind":"lock_dam","transit":"lockage is free to recreational craft; schedule must be confirmed in advance","contact":"US Army Corps of Engineers, Pittsburgh District (Navigation / Locks & Dams)"}],"gages":[{"lat":41.81868,"lon":-78.29279,"site":"03007800","name":"Port Allegany, PA","rm":290.84,"med":68.0,"p25":41.0,"p75":144.0,"yrs":50},{"lat":41.90145,"lon":-78.38446,"site":"03010000","name":"Larabee, PA","rm":278.06,"med":104.0,"p25":56.0,"p75":244.0,"yrs":15},{"lat":41.9634,"lon":-78.38613,"site":"03010500","name":"Eldred, PA","rm":270.32,"med":136.0,"p25":70.0,"p75":271.0,"yrs":86},{"lat":42.07236,"lon":-78.45086,"site":"03010820","name":"Olean, NY","rm":255.5,"med":355.0,"p25":176.0,"p75":541.0,"yrs":16},{"lat":42.15683,"lon":-78.71556,"site":"03011020","name":"Salamanca, NY","rm":234.5,"med":432.0,"p25":244.0,"p75":740.0,"yrs":122},{"lat":41.84145,"lon":-79.01198,"site":"03012550","name":"Kinzua Dam, PA","rm":199.39,"med":1730.0,"p25":1470.0,"p75":2190.0,"yrs":42},{"lat":41.8245,"lon":-79.11893,"site":"03012600","name":"Warren, PA","rm":193.09,"med":530.0,"p25":268.0,"p75":1170.0,"yrs":37},{"lat":41.84395,"lon":-79.14977,"site":"03015310","name":"Below Conewango Creek at Warren, PA","rm":190.97,"med":2320.0,"p25":2020.0,"p75":3160.0,"yrs":20},{"lat":41.57089,"lon":-79.40782,"site":"03016000","name":"West Hickory, PA","rm":159.99,"med":2330.0,"p25":1220.0,"p75":3400.0,"yrs":81},{"lat":41.3895,"lon":-79.82033,"site":"03025500","name":"Franklin, PA","rm":124.78,"med":2770.0,"p25":1750.0,"p75":4630.0,"yrs":85},{"lat":41.10062,"lon":-79.68116,"site":"03031500","name":"Parker, PA","rm":83.69,"med":3560.0,"p25":2000.0,"p75":5160.0,"yrs":93},{"lat":40.95833,"lon":-79.54722,"site":"03033000","name":"Near Rimer, PA","rm":62.41,"med":1920.0,"p25":1340.0,"p75":3220.0,"yrs":7},{"lat":40.82034,"lon":-79.53143,"site":"03036500","name":"Kittanning, PA","rm":45.81,"med":3840.0,"p25":1990.0,"p75":6360.0,"yrs":95},{"lat":40.6153,"lon":-79.71837,"site":"03049500","name":"Natrona, PA","rm":24.2,"med":4590.0,"p25":2870.0,"p75":9390.0,"yrs":87}],"towns":[{"lat":41.77191,"lon":-77.99131,"name":"Coudersport","rm":312.35,"state":"PA"},{"lat":41.81477,"lon":-78.27689,"name":"Port Allegany","rm":292.09,"state":"PA"},{"lat":41.9564,"lon":-78.38167,"name":"Eldred","rm":272.31,"state":"PA"},{"lat":42.03671,"lon":-78.33726,"name":"Portville","rm":262.6,"state":"NY"},{"lat":42.08186,"lon":-78.43214,"name":"Olean","rm":257.08,"state":"NY"},{"lat":42.09641,"lon":-78.50095,"name":"Allegany","rm":251.68,"state":"NY"},{"lat":42.16313,"lon":-78.72328,"name":"Salamanca","rm":233.75,"state":"NY"},{"lat":41.83157,"lon":-79.12104,"name":"Warren","rm":192.72,"state":"PA"},{"lat":41.68478,"lon":-79.40035,"name":"Tidioute","rm":169.12,"state":"PA"},{"lat":41.50347,"lon":-79.45089,"name":"Tionesta","rm":154.36,"state":"PA"},{"lat":41.42814,"lon":-79.7036,"name":"Oil","rm":132.88,"state":"PA"},{"lat":41.38835,"lon":-79.83129,"name":"Franklin","rm":124.74,"state":"PA"},{"lat":41.18055,"lon":-79.70727,"name":"Emlenton","rm":90.01,"state":"PA"},{"lat":41.16098,"lon":-79.65452,"name":"Saint Petersburg","rm":88.02,"state":"PA"},{"lat":41.14592,"lon":-79.68023,"name":"Foxburg","rm":87.02,"state":"PA"},{"lat":41.09065,"lon":-79.68459,"name":"Parker","rm":83.07,"state":"PA"},{"lat":40.98365,"lon":-79.61319,"name":"East Brady","rm":69.4,"state":"PA"},{"lat":40.82383,"lon":-79.52668,"name":"Kittanning","rm":45.98,"state":"PA"},{"lat":40.81275,"lon":-79.53121,"name":"West Kittanning","rm":45.4,"state":"PA"},{"lat":40.80823,"lon":-79.52203,"name":"Applewold","rm":44.87,"state":"PA"},{"lat":40.78774,"lon":-79.52061,"name":"Manorville","rm":43.27,"state":"PA"},{"lat":40.7694,"lon":-79.5327,"name":"Ford","rm":41.91,"state":"PA"},{"lat":40.76082,"lon":-79.53577,"name":"Ford Cliff","rm":41.21,"state":"PA"},{"lat":40.68292,"lon":-79.68367,"name":"Freeport","rm":29.81,"state":"PA"},{"lat":40.60251,"lon":-79.74705,"name":"Tarentum","rm":22.26,"state":"PA"},{"lat":40.60879,"lon":-79.75036,"name":"Brackenridge","rm":22.22,"state":"PA"},{"lat":40.57884,"lon":-79.76555,"name":"Arnold","rm":20.13,"state":"PA"},{"lat":40.57117,"lon":-79.75226,"name":"New Kensington","rm":19.27,"state":"PA"},{"lat":40.55167,"lon":-79.75855,"name":"Lower Burrell","rm":17.97,"state":"PA"},{"lat":40.54087,"lon":-79.7819,"name":"Springdale","rm":16.37,"state":"PA"},{"lat":40.54278,"lon":-79.80125,"name":"Cheswick","rm":15.25,"state":"PA"},{"lat":40.52002,"lon":-79.83655,"name":"Oakmont","rm":12.42,"state":"PA"},{"lat":40.49802,"lon":-79.84681,"name":"Verona","rm":10.73,"state":"PA"},{"lat":40.49219,"lon":-79.85994,"name":"Blawnox","rm":10.02,"state":"PA"},{"lat":40.49286,"lon":-79.90374,"name":"Aspinwall","rm":7.21,"state":"PA"},{"lat":40.49401,"lon":-79.92487,"name":"Sharpsburg","rm":6.18,"state":"PA"},{"lat":40.5038,"lon":-79.94907,"name":"Etna","rm":5.28,"state":"PA"},{"lat":40.48174,"lon":-79.97361,"name":"Millvale","rm":3.79,"state":"PA"},{"lat":40.43963,"lon":-79.97626,"name":"Pittsburgh","rm":1.45,"state":"PA"}]};
+
+const M=D.meta;
+const dark=matchMedia("(prefers-color-scheme: dark)");
+const CV=n=>getComputedStyle(document.documentElement)
+  .getPropertyValue(n).trim();
+
+/* ---------- map ---------- */
+const map=L.map("map",{zoomControl:false,scrollWheelZoom:false,
+  tap:true,minZoom:6,maxZoom:17}).setView([41.3,-79.3],8);
+L.control.zoom({position:"topright"}).addTo(map);
+map.on("click",()=>map.scrollWheelZoom.enable());
+map.on("mouseout",()=>map.scrollWheelZoom.disable());
+
+const TILES={
+  light:"https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  dark:"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"};
+const ATTR='&copy; <a href="https://www.openstreetmap.org/copyright">'+
+  'OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>';
+let base=null;
+function setBase(){
+  if(base) map.removeLayer(base);
+  base=L.tileLayer(dark.matches?TILES.dark:TILES.light,
+    {attribution:ATTR,subdomains:"abcd",maxZoom:19,detectRetina:true})
+    .addTo(map);
+  base.bringToBack();
+}
+setBase();
+dark.addEventListener("change",()=>{setBase(); restyle();});
+
+/* panes so the casings sit under the river and the pins on top */
+["casing","river","pins"].forEach((n,i)=>{
+  map.createPane(n); map.getPane(n).style.zIndex=400+i*10;});
+
+const G={};                                   /* layer groups by key */
+["trails","camping","river","launch","camp","hazard","gage","town"]
+  .forEach(k=>G[k]=L.layerGroup());
+
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rmTxt=rm=>`RM&nbsp;${rm.toFixed(1)}`;
+const dirTo=(lat,lon)=>
+  `<a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=15/${lat}/${lon}" `+
+  `target="_blank" rel="noopener">Open location &rarr;</a>`;
+
+/* ---------- geometry ---------- */
+const MODE={float:"--m-float",wade:"--m-wade",drag:"--m-drag"};
+const MODE_TXT={float:"Floatable at July median flow",
+  wade:"Wadeable — too thin to float a loaded boat",
+  drag:"Below wading flow — this is a carry"};
+let paths=[];
+function riverLines(){
+  D.river.forEach(sg=>{
+    const p=L.polyline(sg.pts,{pane:"river",color:CV(MODE[sg.mode]),
+      weight:3.4,opacity:.95,lineJoin:"round"});
+    p.bindPopup(`<b>${MODE_TXT[sg.mode]}</b><br>${rmTxt(sg.hi)}–${rmTxt(sg.lo)}`);
+    paths.push([p,MODE[sg.mode]]); p.addTo(G.river);});
+}
+function campLines(){
+  D.camp_ok.forEach(c=>{
+    const p=L.polyline(c.pts,{pane:"casing",color:CV("--camp"),weight:9,
+      opacity:.5,lineCap:"round"});
+    p.bindPopup(`<b>${esc(c.name)}</b><br>${esc(c.desig)}<br>`+
+      `${rmTxt(c.hi)}–${rmTxt(c.lo)}<br><br>${esc(c.rule)}`);
+    paths.push([p,"--camp"]); p.addTo(G.camping);});
+  D.tribal.forEach(t=>{
+    const p=L.polyline(t.pts,{pane:"casing",color:CV("--trb"),weight:9,
+      opacity:.5,lineCap:"round"});
+    p.bindPopup(`<b>${esc(t.name)}</b><br>${rmTxt(t.hi)}–${rmTxt(t.lo)}`+
+      `<br><br>Sovereign ground. The Nation, not a state agency, is the `+
+      `authority on access, camping and fishing here.`);
+    paths.push([p,"--trb"]); p.addTo(G.camping);});
+}
+function trailLines(){
+  D.trails.forEach(t=>{
+    const p=L.polyline(t.pts,{pane:"casing",color:CV("--trail"),weight:14,
+      opacity:t.designated?.3:.16,lineCap:"round"});
+    p.bindPopup(`<b>${esc(t.steward)}</b><br>${esc(t.name)}<br>`+
+      `${rmTxt(t.hi)}–${rmTxt(t.lo)} · ${t.mi.toFixed(0)} mi<br>`+
+      `<span style="color:var(--ink3)">${esc(t.status)}</span><br><br>`+
+      `<a href="tel:${esc(t.phone)}">${esc(t.phone)}</a> · `+
+      `<a href="${esc(t.url)}" target="_blank" rel="noopener">guide &rarr;</a>`+
+      `<br><span style="color:var(--ink3)">${esc(t.addr)}</span>`);
+    paths.push([p,"--trail"]); p.addTo(G.trails);});
+}
+function restyle(){paths.forEach(([p,v])=>p.setStyle({color:CV(v)}));}
+
+/* ---------- markers ---------- */
+function dot(o,color,r,pane){
+  return L.circleMarker([o.lat,o.lon],{pane:pane||"pins",radius:r,
+    color:"#fff",weight:1.6,fillColor:CV(color),fillOpacity:1});
+}
+const idx=[];   /* search index */
+function addPoints(){
+  D.launches.forEach(o=>{
+    const m=dot(o,"--launch",6);
+    m.bindPopup(`<b>${esc(o.name)}</b><br>Public launch · ${esc(o.agency)}`+
+      `<br>${rmTxt(o.rm)}${o.ramp&&o.ramp!=="nan"?"<br>Ramp: "+esc(o.ramp):""}`+
+      `<br><br>${dirTo(o.lat,o.lon)}`);
+    m.addTo(G.launch); idx.push({n:o.name,k:"Launch",rm:o.rm,m:m,z:14});});
+  D.camps.forEach(o=>{
+    const m=dot(o,"--camp",5);
+    m.bindPopup(`<b>${esc(o.name)}</b><br>Campground`+
+      `${o.op&&o.op!=="nan"?" · "+esc(o.op):""}<br>${rmTxt(o.rm)}`+
+      ` · ${(o.off/1609).toFixed(1)} mi from the water<br><br>${dirTo(o.lat,o.lon)}`);
+    m.addTo(G.camp); idx.push({n:o.name,k:"Campground",rm:o.rm,m:m,z:14});});
+  D.barriers.forEach(o=>{
+    const dam=o.kind==="dam_portage";
+    const m=L.circleMarker([o.lat,o.lon],{pane:"pins",radius:dam?8:6,
+      color:"#fff",weight:1.8,fillColor:CV("--hazard"),fillOpacity:1});
+    m.bindPopup(`<b>${esc(o.name)}</b><br>${rmTxt(o.rm)}<br><br>`+
+      `${esc(o.transit)}`+
+      (o.contact&&o.contact!=="nan"?`<br><br>${esc(o.contact)}`:""));
+    m.addTo(G.hazard); idx.push({n:o.name,k:dam?"Portage":"Lock",rm:o.rm,m:m,z:13});});
+  D.gages.forEach(o=>{
+    const m=dot(o,"--gage",5);
+    o._m=m; m.bindPopup(gagePopup(o));
+    m.addTo(G.gage); idx.push({n:o.name,k:"USGS gage",rm:o.rm,m:m,z:13});});
+  D.towns.forEach(o=>{
+    const m=L.circleMarker([o.lat,o.lon],{pane:"pins",radius:3.4,
+      color:CV("--ink3"),weight:1.4,fillColor:CV("--panel"),fillOpacity:1});
+    m.bindPopup(`<b>${esc(o.name)}, ${esc(o.state)}</b><br>${rmTxt(o.rm)}`);
+    m.addTo(G.town); idx.push({n:o.name,k:"Town",rm:o.rm,m:m,z:13});});
+}
+function gagePopup(o){
+  const live=o._cfs==null?"":
+    `<br><b style="font-size:17px">${Math.round(o._cfs).toLocaleString()} cfs</b>`+
+    ` <span style="color:var(--ink3)">now</span>`+
+    (o._ft!=null?`<br>${o._ft.toFixed(2)} ft gage height`:"");
+  return `<b>${esc(o.name)}</b><br>${rmTxt(o.rm)}${live}`+
+    (o.med!=null?`<br><span style="color:var(--ink3)">`+
+      `${Math.round(o.med).toLocaleString()} cfs is the median for today`+
+      (o.yrs?` over ${o.yrs} years`:"")+`</span>`:"")+
+    `<br><br><a href="https://waterdata.usgs.gov/monitoring-location/${o.site}/"`+
+    ` target="_blank" rel="noopener">USGS ${o.site} &rarr;</a>`;
+}
+
+riverLines(); campLines(); trailLines(); addPoints();
+
+/* ---------- layer chips ---------- */
+const CHIPS=[
+  ["river","River",      "--m-float", true,  true],
+  ["camping","Legal camping","--camp", true, true],
+  ["launch","Launches",  "--launch",  true,  false],
+  ["camp","Campgrounds", "--camp",    true,  false],
+  ["hazard","Dams & locks","--hazard",true,  false],
+  ["trails","Trail steward","--trail",true,  true],
+  ["gage","Gages",       "--gage",    false, false],
+  ["town","Towns",       "--ink3",    true,  false],
+];
+const chips=document.getElementById("chips");
+CHIPS.forEach(([k,label,col,on,isLine])=>{
+  const b=document.createElement("button");
+  b.className="chip"+(isLine?" line":""); b.type="button";
+  b.setAttribute("aria-pressed",on);
+  b.innerHTML=`<i style="background:var(${col})"></i>${label}`;
+  b.onclick=()=>{const v=b.getAttribute("aria-pressed")!=="true";
+    b.setAttribute("aria-pressed",v);
+    v?G[k].addTo(map):map.removeLayer(G[k]);};
+  chips.appendChild(b);
+  if(on) G[k].addTo(map);
+});
+
+/* fit to the river */
+const bounds=L.latLngBounds([]);
+D.river.forEach(s=>s.pts.forEach(p=>bounds.extend(p)));
+map.fitBounds(bounds,{padding:[24,24]});
+
+/* locate */
+const Locate=L.Control.extend({options:{position:"topright"},
+  onAdd(){const d=L.DomUtil.create("div","leaflet-bar");
+    const a=L.DomUtil.create("a",'',d); a.href="#"; a.title="Where am I";
+    a.innerHTML="&#9678;"; a.style.fontSize="17px";
+    L.DomEvent.on(a,"click",e=>{L.DomEvent.stop(e);
+      map.locate({setView:true,maxZoom:13});});
+    return d;}});
+map.addControl(new Locate());
+map.on("locationfound",e=>L.circleMarker(e.latlng,{pane:"pins",radius:7,
+  color:"#fff",weight:2,fillColor:CV("--water"),fillOpacity:1})
+  .addTo(map).bindPopup("You are here").openPopup());
+map.on("locationerror",()=>alert(
+  "Could not get your location. Your browser may have blocked it."));
+
+/* ---------- search ---------- */
+const q=document.getElementById("q"), res=document.getElementById("res"),
+      qclear=document.getElementById("qclear");
+const norm=s=>s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]/g,"");
+idx.forEach(o=>o._n=norm(o.n));
+let hits=[], cur=-1;
+
+function goto(o){
+  res.style.display="none"; q.blur();
+  const g=Object.entries(G).find(([,grp])=>grp.hasLayer(o.m));
+  if(g&&!map.hasLayer(g[1])){
+    g[1].addTo(map);
+    const b=[...chips.children].find(c=>c.textContent.trim()===
+      (CHIPS.find(c2=>c2[0]===g[0])||[])[1]);
+    if(b) b.setAttribute("aria-pressed","true");
+  }
+  map.setView(o.m.getLatLng(),o.z,{animate:true});
+  setTimeout(()=>o.m.openPopup(),260);
+}
+function gotoRM(rm){
+  rm=Math.max(0,Math.min(rm,M.top_rm));
+  /* interpolate along the reach that contains this mile */
+  const sg=D.river.find(s=>rm<=s.hi&&rm>=s.lo)||D.river[0];
+  const f=(sg.hi-rm)/Math.max(sg.hi-sg.lo,1e-6);
+  const p=sg.pts[Math.min(Math.round(f*(sg.pts.length-1)),sg.pts.length-1)];
+  res.style.display="none"; q.blur();
+  map.setView(p,13,{animate:true});
+  L.popup().setLatLng(p).setContent(
+    `<b>River mile ${rm.toFixed(1)}</b><br>`+
+    `<span style="color:var(--ink3)">0.0 is the mouth at Pittsburgh</span>`)
+   .openOn(map);
+}
+function render(){
+  if(!hits.length){res.style.display="none"; return;}
+  res.innerHTML=hits.map((o,i)=>
+    `<button role="option" data-i="${i}"${i===cur?' class="on"':""}>`+
+    `${esc(o.n)}<span class="k">${esc(o.k)} · RM ${o.rm.toFixed(0)}</span>`+
+    `</button>`).join("");
+  res.style.display="block";
+  [...res.children].forEach(b=>b.onclick=()=>goto(hits[+b.dataset.i]));
+}
+q.addEventListener("input",()=>{
+  const v=q.value.trim(); qclear.hidden=!v; cur=-1;
+  if(!v){hits=[]; res.style.display="none"; return;}
+  const m=v.match(/^(?:rm\s*)?(\d{1,3}(?:\.\d)?)$/i);
+  if(m&&+m[1]<=M.top_rm){
+    hits=[]; res.innerHTML=`<button data-rm="${m[1]}">Go to river mile `+
+      `${m[1]}<span class="k">River mile</span></button>`;
+    res.style.display="block";
+    res.firstChild.onclick=()=>gotoRM(parseFloat(m[1])); return;}
+  const n=norm(v);
+  hits=idx.filter(o=>o._n.includes(n))
+    .sort((a,b)=>a._n.indexOf(n)-b._n.indexOf(n)||a.n.length-b.n.length)
+    .slice(0,12);
+  render();
+});
+q.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){q.value=""; hits=[]; res.style.display="none";
+    qclear.hidden=true; return;}
+  if(!hits.length) return;
+  if(e.key==="ArrowDown"){cur=(cur+1)%hits.length; render(); e.preventDefault();}
+  else if(e.key==="ArrowUp"){cur=(cur-1+hits.length)%hits.length; render();
+    e.preventDefault();}
+  else if(e.key==="Enter"&&cur>=0){goto(hits[cur]); e.preventDefault();}
+  else if(e.key==="Enter"&&hits.length){goto(hits[0]); e.preventDefault();}
+});
+qclear.onclick=()=>{q.value=""; hits=[]; res.style.display="none";
+  qclear.hidden=true; q.focus();};
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".searchwrap")) res.style.display="none";});
+
+/* ---------- live flow ---------- */
+const cards=document.getElementById("flowcards"),
+      note=document.getElementById("flownote");
+function band(cfs,g){
+  if(cfs==null) return ["p-na","no current reading"];
+  if(cfs<M.wade_cfs) return ["p-hi","too low to float"];
+  if(cfs<M.float_cfs) return ["p-lo","wadeable, not floatable"];
+  if(g.p75!=null&&cfs>g.p75*2.5) return ["p-hi","running high"];
+  return ["p-ok","floatable"];
+}
+function drawFlow(){
+  cards.innerHTML=D.gages.map(g=>{
+    const [cls,txt]=band(g._cfs,g);
+    const pct=(g._cfs!=null&&g.med)?Math.round(g._cfs/g.med*100):null;
+    return `<div class="g">
+      <div class="nm">${esc(g.name)}</div>
+      <div class="rm">RM ${g.rm.toFixed(1)}</div>
+      <div class="now">${g._cfs!=null
+        ?Math.round(g._cfs).toLocaleString()+' <s>cfs</s>'
+        :'<s>—</s>'}</div>
+      <div class="vs">${g.med!=null
+        ?`median today ${Math.round(g.med).toLocaleString()} cfs`+
+         (pct!=null?` · <b>${pct}%</b>`:"")
+        :"no median on record"}</div>
+      <span class="pill ${cls}">${txt}</span>
+    </div>`;}).join("");
+}
+drawFlow();
+const sites=D.gages.map(g=>g.site).join(",");
+fetch("https://waterservices.usgs.gov/nwis/iv/?format=json&sites="+sites+
+      "&parameterCd=00060,00065&siteStatus=all")
+  .then(r=>r.ok?r.json():Promise.reject(r.status))
+  .then(j=>{
+    let newest=null;
+    (j.value?.timeSeries||[]).forEach(ts=>{
+      const site=ts.sourceInfo.siteCode[0].value;
+      const code=ts.variable.variableCode[0].value;
+      const v=ts.values?.[0]?.value?.[0];
+      if(!v||v.value==="-999999") return;
+      const g=D.gages.find(x=>x.site===site); if(!g) return;
+      if(code==="00060") g._cfs=parseFloat(v.value);
+      if(code==="00065") g._ft=parseFloat(v.value);
+      if(v.dateTime&&(!newest||v.dateTime>newest)) newest=v.dateTime;});
+    drawFlow();
+    D.gages.forEach(g=>{if(g._m) g._m.setPopupContent(gagePopup(g));});
+    const n=D.gages.filter(g=>g._cfs!=null).length;
+    note.innerHTML=n
+      ? `${n} of ${D.gages.length} gages reporting; latest reading `+
+        new Date(newest).toLocaleString([], {dateStyle:"medium",
+          timeStyle:"short"})+`. Source: USGS Water Services.`
+      : "USGS returned no current readings just now.";
+  })
+  .catch(()=>{note.textContent=
+    "Could not reach USGS for current readings — the medians above are "+
+    "still this river's own, from decades of record.";});
+</script>
+</body>
+</html>
