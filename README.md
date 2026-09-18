@@ -11,7 +11,7 @@ The map is one HTML file with no tiles, no images and no external requests.
 It opens offline, and it works behind a content-security policy that blocks
 third-party tile hosts.
 
-`docs/allegheny_river_atlas.gpkg` — one OGC GeoPackage, 22 layers, EPSG:4326,
+`docs/allegheny_river_atlas.gpkg` — one OGC GeoPackage, 23 layers, EPSG:4326,
 3 MB. Drag it into QGIS. Works in ArcGIS Pro, R `sf`, `geopandas`, GDAL/OGR.
 
 ## Why this exists
@@ -30,6 +30,10 @@ Three findings drove the rest of it:
   general-purpose map.
 - **Roughly 175 river miles — over half the route — carry a "Not Supporting"
   water-quality status** in EPA ATTAINS.
+- **Four bodies steward stretches of this river and Pennsylvania's published
+  GIS maps one of them.** The other three reaches are signed, launched and
+  maintained by organisations you can ring, and appear on no map. Seventy-one
+  miles have no steward at all.
 
 ## The river-mile convention
 
@@ -43,7 +47,7 @@ single level path with an unbroken FromNode/ToNode chain, measured geodesically
 on the WGS 84 ellipsoid. It validates against NHD's own mapped lock chambers to
 a **mean absolute deviation of 0.049 mile**.
 
-## Seven layers that exist nowhere else
+## Nine layers that exist nowhere else
 
 These were river-mile span tables — the analytical output — cut from the
 centerline into real geometry so they can be mapped and intersected:
@@ -57,6 +61,8 @@ centerline into real geometry so they can be mapped and intersected:
 | `river_fishing_regulations` | PFBC regulation sections as river geometry |
 | `river_fish_advisories` | Consumption advisory extents |
 | `river_drone_restrictions` | Wilderness Act §4(c) applied to wilderness boundaries |
+| `water_trails` | Each stewarded reach with the body that stewards it, its address, phone and guide — only one of the four is mapped in any public GIS |
+| `water_trail_gaps` | The 71 river miles no water trail covers |
 
 See [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) for every layer, field
 meanings, provenance and stated limitations.

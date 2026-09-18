@@ -1,6 +1,6 @@
 # Allegheny River Atlas — Data Dictionary
 
-`allegheny_river_atlas.gpkg` — OGC GeoPackage, **EPSG:4326 (WGS 84)**, 21 spatial layers plus a metadata table. Compiled 2026-09-18.
+`allegheny_river_atlas.gpkg` — OGC GeoPackage, **EPSG:4326 (WGS 84)**, 22 spatial layers plus a metadata table. Compiled 2026-09-18.
 
 Opens directly in QGIS (drag the file in), ArcGIS Pro, R (`sf`), Python (`geopandas`) and GDAL/OGR. One file, no dependencies, no projection guessing.
 
@@ -22,7 +22,7 @@ The centerline is the USGS NHDPlus High Resolution mainstem: 652 flowlines on a 
 | `campgrounds` | 84 | Point | USFS / USGS TNM / NYSDEC / OpenStreetMap |
 | `nightly_stops` | 24 | Point | derived |
 | `towns` | 39 | Point | USGS |
-| `water_trails` | 1 | LineString | PA Fish & Boat Commission |
+| `water_trails` | 4 | LineString | PA Fish & Boat Commission (mapped extent) + each steward's own published material |
 | `kinzua_portage_route` | 1 | LineString | OpenStreetMap + USGS 3DEP |
 | `river_traverse_mode` | 3 | LineString | derived |
 | `river_camping_legality` | 113 | LineString | derived |
@@ -32,6 +32,7 @@ The centerline is the USGS NHDPlus High Resolution mainstem: 652 flowlines on a 
 | `river_drone_restrictions` | 8 | LineString | derived |
 | `river_fish_advisories` | 3 | LineString | PA DEP / PFBC |
 | `river_counties` | 10 | LineString | USGS |
+| `water_trail_gaps` | 3 | LineString | Derived |
 | `hospitals` | 63 | Point | USGS |
 | `riparian_parcels` | 52 | Point | County assessment offices |
 | `river_mile_markers` | 65 | Point | derived |
@@ -76,7 +77,7 @@ Every layer also carries `source_agency`, `source_dataset`, `source_licence` and
 | `campgrounds` | Recreation sites, TNM Structures, OSM camp_site | Mixed; OSM portion is ODbL |
 | `nightly_stops` | Output of the pacing model | Derived |
 | `towns` | The National Map, geonames incorporated places | US Government work, public domain |
-| `water_trails` | Water Trails, via PASDA | PASDA terms; attribution required |
+| `water_trails` | Water Trails via PASDA; steward contacts verified against each organisation's own page | PASDA terms; attribution required |
 | `kinzua_portage_route` | OSM highway network, USGS elevation | OSM: ODbL, attribution required |
 | `river_traverse_mode` | USGS daily-median discharge applied to NHD drainage area | Derived |
 | `river_camping_legality` | Agency land layers classified against published camping rules | Derived |
@@ -86,6 +87,7 @@ Every layer also carries `source_agency`, `source_dataset`, `source_licence` and
 | `river_drone_restrictions` | Wilderness Act s.4(c) applied to USFS Wilderness boundaries | Derived |
 | `river_fish_advisories` | Fish consumption advisory tables | Public health guidance; verify before use |
 | `river_counties` | The National Map, govunits | US Government work, public domain |
+| `water_trail_gaps` | Reaches no water trail covers | CC BY 4.0 |
 | `hospitals` | The National Map, structures | US Government work, public domain |
 | `riparian_parcels` | Potter, Forest, Butler, Warren, Venango, Allegheny, Westmoreland, NYSDEC tax parcels | Public records; owner names are assessment data |
 | `river_mile_markers` | Computed from the NHD centerline | Derived; same terms as source |

@@ -74,8 +74,13 @@ PROVENANCE = {
     "kinzua_portage_route": ("OpenStreetMap + USGS 3DEP",
                              "OSM highway network, USGS elevation",
                              "OSM: ODbL, attribution required"),
-    "water_trails": ("PA Fish & Boat Commission", "Water Trails, via PASDA",
+    "water_trails": ("PA Fish & Boat Commission (mapped extent) + each "
+                     "steward's own published material",
+                     "Water Trails via PASDA; steward contacts verified "
+                     "against each organisation's own page",
                      "PASDA terms; attribution required"),
+    "water_trail_gaps": ("Derived", "Reaches no water trail covers",
+                         "CC BY 4.0"),
     "public_lands": ("USFS / PA DCNR / PGC / PFBC / NYSDEC",
                      "Ownership and boundary polygons",
                      "Public agency data; check each agency"),
@@ -257,6 +262,8 @@ def main() -> None:
     layers["river_fish_advisories"] = spans_to_lines(ri, fa)
     rc = pd.read_csv(P / "route_counties.csv")
     layers["river_counties"] = spans_to_lines(ri, rc)
+    tg = pd.read_csv(P / "water_trail_gaps.csv")
+    layers["water_trail_gaps"] = spans_to_lines(ri, tg)
 
     # ---------------- point tables that had only lon/lat columns
     hosp = pd.read_csv(P / "hospitals.csv")

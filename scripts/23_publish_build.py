@@ -89,6 +89,40 @@ LEGEND = """\
     </div>"""
 
 
+def build_trail_rows(trails) -> str:
+    """One row per stewarded reach: who to ring, and what to read first."""
+    out = []
+    for _, r in trails.iterrows():
+        tag = ("" if r["designated"] else
+               '<br><span class="q">promoted route, not a designated '
+               'trail</span>')
+        co = (f'<br><span class="q">with {r["cosponsor"]} · '
+              f'{r["cosponsor_phone"]}</span>' if r["cosponsor"] else "")
+        host = (str(r["guide_url"]).split("//")[-1].split("/")[0]
+                .replace("www.", ""))
+        out.append(
+            f'      <tr><td class="n">{r["rm_hi"]:.0f}–{r["rm_lo"]:.0f}'
+            f'<br><span class="q">{r["span_mi"]:.0f} mi</span></td>'
+            f'<td>{r["name"]}{tag}</td>'
+            f'<td>{r["steward"]}{co}</td>'
+            f'<td class="mono"><a href="tel:{r["steward_phone"]}">'
+            f'{r["steward_phone"]}</a></td>'
+            f'<td><a href="{r["guide_url"]}" rel="noopener">{host}</a></td>'
+            f'</tr>')
+    return "\n".join(out)
+
+
+def describe_trail_gaps() -> str:
+    """The unstewarded reaches, named by the towns that bracket them."""
+    import pandas as _pd
+    g = _pd.read_csv(config.PROC / "water_trail_gaps.csv")
+    parts = [f'RM&nbsp;{r["rm_hi"]:.0f}–{r["rm_lo"]:.0f}'
+             for _, r in g.iterrows()]
+    if len(parts) > 1:
+        return ", ".join(parts[:-1]) + " and " + parts[-1]
+    return parts[0] if parts else "none"
+
+
 def build_public_gpkg() -> list[tuple[str, int, str]]:
     DOCS.mkdir(exist_ok=True)
     if PUB_GPKG.exists():
@@ -152,6 +186,8 @@ def main() -> None:
     figs = sitesvg.build()
     f = figs["facts"]
     legend = LEGEND.format(**f)
+    trail_rows = build_trail_rows(figs["trails"])
+    gap_list = describe_trail_gaps()
 
 
     (DOCS / "LICENSE.txt").write_text(f"""Allegheny River Atlas
@@ -216,14 +252,14 @@ frontage, water quality and access, by river mile.">
 --band:#e7e4dc;--m-float:#2d6b7c;--m-wade:#bf8a2c;--m-drag:#a6433b;
 --l-nf:#dde7d9;--l-wild:#c3d8bd;--l-sf:#e4ebe0;--l-sgl:#ece7d4;
 --l-sp:#d9e7ea;--l-trb:#eddfe6;--camp:#3e7a4b;--trb:#8d6a86;
---cty-pa:#dcd8ce;--cty-ny:#cfd6d8;}}
+--cty-pa:#dcd8ce;--cty-ny:#cfd6d8;--trail:#3f6f86;--trail-soft:#a9c2cd;}}
 @media (prefers-color-scheme:dark){{:root{{--ground:#15181b;--panel:#1c2125;
 --ink:#e8e6e0;--ink2:#a3adb2;--ink3:#6f797e;--rule:#2c3338;--water:#6ba8ba;
 --ok:#6aa878;--warn:#d9756b;
 --band:#232a2f;--m-float:#6ba8ba;--m-wade:#d9a441;--m-drag:#d9756b;
 --l-nf:#1e2a22;--l-wild:#28392b;--l-sf:#222c25;--l-sgl:#2b2a22;
 --l-sp:#1e2a2d;--l-trb:#2c2129;--camp:#6aa878;--trb:#a4809c;
---cty-pa:#272d31;--cty-ny:#20292d;}}}}
+--cty-pa:#272d31;--cty-ny:#20292d;--trail:#4d8098;--trail-soft:#33505e;}}}}
 *{{box-sizing:border-box}}
 body{{margin:0;background:var(--ground);color:var(--ink);
 font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
@@ -252,15 +288,15 @@ min-width:340px}}
 th,td{{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule)}}
 th{{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
 color:var(--ink3);font-weight:600}}
-td.n{{text-align:right;font-family:"IBM Plex Mono",monospace}}
+td.n{{text-align:right;font-family:"IBM Plex Mono",monospace;white-space:nowrap}}
+.q{{color:var(--ink3);font-size:11.5px}}
+td.mono{{font-family:"IBM Plex Mono",monospace;white-space:nowrap}}
 code{{font-family:"IBM Plex Mono",monospace;font-size:.9em;
 background:var(--rule);padding:1px 5px;border-radius:4px;
 overflow-wrap:anywhere;word-break:break-word}}
 pre{{overflow-x:auto;background:var(--rule);padding:12px 14px;border-radius:6px;
 font-size:13px;margin:12px 0}}
 pre code{{background:none;padding:0}}
-.note{{border-left:3px solid var(--warn);padding:2px 0 2px 16px;
-color:var(--ink2);margin:20px 0}}
 .stats{{display:flex;flex-wrap:wrap;gap:28px;margin:20px 0 0}}
 .stat b{{display:block;font-size:24px;font-family:"IBM Plex Mono",monospace}}
 .stat span{{font-size:11px;text-transform:uppercase;letter-spacing:.07em;
@@ -275,7 +311,7 @@ figure{{margin:30px 0 0}}
 border-radius:10px;padding:16px 16px 12px}}
 .fig{{display:block;width:100%;height:auto;overflow:visible}}
 .scrollx{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
-.scrollx .strip{{min-width:860px}}
+@media (max-width:880px){{.scrollx .strip{{min-width:860px}}}}
 .plan{{max-width:520px;margin:0 auto}}
 figcaption{{color:var(--ink2);font-size:13.5px;margin-top:10px;
 padding-top:10px;border-top:1px solid var(--rule);max-width:none}}
@@ -334,6 +370,12 @@ font-family:"IBM Plex Mono",monospace}}
 .strip .s-drag{{fill:var(--m-drag)}}
 .strip .s-camp{{fill:var(--camp)}} .strip .s-tribal{{fill:var(--trb)}}
 .strip .s-cty-pa{{fill:var(--cty-pa)}} .strip .s-cty-ny{{fill:var(--cty-ny)}}
+.strip .s-trail{{fill:var(--trail)}}
+.strip .s-trail-soft{{fill:var(--trail-soft)}}
+.strip .t-trail{{font-size:9px;fill:#fff}}
+.strip .t-nosteward{{font-size:9px;fill:var(--ink3)}}
+.strip .t-trail-out{{font-size:9px;fill:var(--trail);font-weight:600}}
+.strip .leader-t{{stroke:var(--trail);stroke-width:1}}
 .strip .t-lane{{font-size:9px;letter-spacing:.09em;fill:var(--ink3);
 font-weight:600}}
 .strip .t-cty{{font-size:9px;fill:var(--ink2)}}
@@ -424,16 +466,40 @@ font-family:"IBM Plex Mono",monospace}}
         Nation</span>
       <span><i style="background:var(--band)"></i>No lawful public
         campsite</span>
+      <span><i style="background:var(--trail)"></i>Designated water
+        trail</span>
+      <span><i style="background:var(--trail-soft)"></i>Promoted paddling
+        reach</span>
     </div>
     <div class="scrollx">{figs['strip']}</div>
     <figcaption>This is how a river is actually read. Every layer in the
     dataset keys to this axis, so any two of them join on position without a
     spatial operation. The middle band is the finding the rest of the
     project turned on: the green is everywhere along {f['start_rm']:.0f} miles
-    of river where the public may lawfully camp, reached from the water.
-    Scroll it sideways on a phone; on a desktop, hovering any band gives the
-    reach and the rule behind it.</figcaption>
+    of river where the public may lawfully camp, reached from the water. The
+    band below it answers a different question — who, if anyone, stewards the
+    reach you are standing in. Scroll it sideways on a phone; on a desktop,
+    hovering any band gives the reach, the rule and the steward behind
+    it.</figcaption>
   </figure>
+
+  <h2>Who stewards each reach</h2>
+  <p>A water trail grants nobody a right of access. What it gives a paddler is
+  a named body that signs the reach, keeps the launches open and will pick up
+  the phone about a closed one. That is the useful fact, and it is the one
+  that is hardest to find — Pennsylvania's published GIS maps
+  <b>one</b> of the four stewarded reaches below. The rest are real, and
+  unmapped.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Reach</th><th>Trail</th><th>Steward</th>
+      <th>Call</th><th>Guide</th></tr></thead>
+    <tbody>
+{trail_rows}
+    </tbody>
+  </table></div>
+  <p><b>{f['trail_unstewarded_mi']:.0f} river miles have no steward at
+  all</b> — the {gap_list}. On those reaches there is no one whose job it is
+  to tell you a launch has washed out.</p>
 
   <h2>The river-mile convention</h2>
   <p>Everything is keyed to <b>river mile 0.0 at the mouth, increasing
@@ -458,18 +524,6 @@ font-family:"IBM Plex Mono",monospace}}
   can be mapped and intersected: camping legality, measured public-land
   frontage, traverse mode, water quality, fishing regulations, drone
   restrictions and county extents.</p>
-
-  <h2>What is deliberately not here</h2>
-  <div class="note">
-    <p>The working dataset identifies riparian parcels for stretches with no
-    lawful public campsite, and for two counties those records carry owner
-    names and home mailing addresses. <b>Those are not republished here.</b>
-    They are public records, and looking one up to write and ask a landowner
-    for permission is proportionate. Aggregating them onto the open web
-    under a heading about where to camp is not.</p>
-    <p>Parcel identifiers, county and municipality are included, so anyone
-    can make their own enquiry through the county assessment office.</p>
-  </div>
 
   <h2>Use it</h2>
   <p>Drag the <code>.gpkg</code> into QGIS. Or:</p>

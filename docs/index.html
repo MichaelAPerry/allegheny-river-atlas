@@ -15,14 +15,14 @@ frontage, water quality and access, by river mile.">
 --band:#e7e4dc;--m-float:#2d6b7c;--m-wade:#bf8a2c;--m-drag:#a6433b;
 --l-nf:#dde7d9;--l-wild:#c3d8bd;--l-sf:#e4ebe0;--l-sgl:#ece7d4;
 --l-sp:#d9e7ea;--l-trb:#eddfe6;--camp:#3e7a4b;--trb:#8d6a86;
---cty-pa:#dcd8ce;--cty-ny:#cfd6d8;}
+--cty-pa:#dcd8ce;--cty-ny:#cfd6d8;--trail:#3f6f86;--trail-soft:#a9c2cd;}
 @media (prefers-color-scheme:dark){:root{--ground:#15181b;--panel:#1c2125;
 --ink:#e8e6e0;--ink2:#a3adb2;--ink3:#6f797e;--rule:#2c3338;--water:#6ba8ba;
 --ok:#6aa878;--warn:#d9756b;
 --band:#232a2f;--m-float:#6ba8ba;--m-wade:#d9a441;--m-drag:#d9756b;
 --l-nf:#1e2a22;--l-wild:#28392b;--l-sf:#222c25;--l-sgl:#2b2a22;
 --l-sp:#1e2a2d;--l-trb:#2c2129;--camp:#6aa878;--trb:#a4809c;
---cty-pa:#272d31;--cty-ny:#20292d;}}
+--cty-pa:#272d31;--cty-ny:#20292d;--trail:#4d8098;--trail-soft:#33505e;}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);
 font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
@@ -51,15 +51,15 @@ min-width:340px}
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule)}
 th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
 color:var(--ink3);font-weight:600}
-td.n{text-align:right;font-family:"IBM Plex Mono",monospace}
+td.n{text-align:right;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.q{color:var(--ink3);font-size:11.5px}
+td.mono{font-family:"IBM Plex Mono",monospace;white-space:nowrap}
 code{font-family:"IBM Plex Mono",monospace;font-size:.9em;
 background:var(--rule);padding:1px 5px;border-radius:4px;
 overflow-wrap:anywhere;word-break:break-word}
 pre{overflow-x:auto;background:var(--rule);padding:12px 14px;border-radius:6px;
 font-size:13px;margin:12px 0}
 pre code{background:none;padding:0}
-.note{border-left:3px solid var(--warn);padding:2px 0 2px 16px;
-color:var(--ink2);margin:20px 0}
 .stats{display:flex;flex-wrap:wrap;gap:28px;margin:20px 0 0}
 .stat b{display:block;font-size:24px;font-family:"IBM Plex Mono",monospace}
 .stat span{font-size:11px;text-transform:uppercase;letter-spacing:.07em;
@@ -74,7 +74,7 @@ figure{margin:30px 0 0}
 border-radius:10px;padding:16px 16px 12px}
 .fig{display:block;width:100%;height:auto;overflow:visible}
 .scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.scrollx .strip{min-width:860px}
+@media (max-width:880px){.scrollx .strip{min-width:860px}}
 .plan{max-width:520px;margin:0 auto}
 figcaption{color:var(--ink2);font-size:13.5px;margin-top:10px;
 padding-top:10px;border-top:1px solid var(--rule);max-width:none}
@@ -133,6 +133,12 @@ font-family:"IBM Plex Mono",monospace}
 .strip .s-drag{fill:var(--m-drag)}
 .strip .s-camp{fill:var(--camp)} .strip .s-tribal{fill:var(--trb)}
 .strip .s-cty-pa{fill:var(--cty-pa)} .strip .s-cty-ny{fill:var(--cty-ny)}
+.strip .s-trail{fill:var(--trail)}
+.strip .s-trail-soft{fill:var(--trail-soft)}
+.strip .t-trail{font-size:9px;fill:#fff}
+.strip .t-nosteward{font-size:9px;fill:var(--ink3)}
+.strip .t-trail-out{font-size:9px;fill:var(--trail);font-weight:600}
+.strip .leader-t{stroke:var(--trail);stroke-width:1}
 .strip .t-lane{font-size:9px;letter-spacing:.09em;fill:var(--ink3);
 font-weight:600}
 .strip .t-cty{font-size:9px;fill:var(--ink2)}
@@ -156,9 +162,9 @@ font-family:"IBM Plex Mono",monospace}
   public-land frontage, water quality and access, indexed by river mile.</p>
   <div class="stats">
     <div class="stat"><b>312</b><span>river miles</span></div>
-    <div class="stat"><b>22</b><span>layers</span></div>
+    <div class="stat"><b>23</b><span>layers</span></div>
     <div class="stat"><b>0.049</b><span>mi index error</span></div>
-    <div class="stat"><b>3.0</b><span>MB</span></div>
+    <div class="stat"><b>3.2</b><span>MB</span></div>
   </div>
 </div></header>
 
@@ -410,7 +416,7 @@ font-family:"IBM Plex Mono",monospace}
     <a class="btn primary" href="map.html"><b>Open the interactive map</b>
       <span>Pan, zoom, toggle layers, click anything</span></a>
     <a class="btn" href="allegheny_river_atlas.gpkg" download>
-      <b>Download the GeoPackage</b><span>3.0 MB · EPSG:4326 ·
+      <b>Download the GeoPackage</b><span>3.2 MB · EPSG:4326 ·
       opens in QGIS</span></a>
     <a class="btn" href="DATA_DICTIONARY.md"><b>Data dictionary</b>
       <span>Layers, fields, provenance, limits</span></a>
@@ -450,8 +456,12 @@ font-family:"IBM Plex Mono",monospace}
         Nation</span>
       <span><i style="background:var(--band)"></i>No lawful public
         campsite</span>
+      <span><i style="background:var(--trail)"></i>Designated water
+        trail</span>
+      <span><i style="background:var(--trail-soft)"></i>Promoted paddling
+        reach</span>
     </div>
-    <div class="scrollx"><svg class="fig strip" viewBox="0 0 1000 224" role="img" aria-label="The route as a single river-mile axis from river mile 312 at Coudersport to river mile 0 at Pittsburgh, banded by in-channel traverse mode, legal public camping and county.">
+    <div class="scrollx"><svg class="fig strip" viewBox="0 0 1000 266" role="img" aria-label="The route as a single river-mile axis from river mile 312 at Coudersport to river mile 0 at Pittsburgh, banded by in-channel traverse mode, legal public camping and county.">
 <text class="t-strip-town" x="8.0" y="14" text-anchor="start">Coudersport</text>
 <line class="tick-town" x1="8.0" y1="19" x2="8.0" y2="62.0"/>
 <text class="t-strip-town" x="133.8" y="14" text-anchor="middle">Eldred</text>
@@ -526,64 +536,99 @@ font-family:"IBM Plex Mono",monospace}
 <text class="t-gap" x="821.9" y="137.0" text-anchor="middle">108 mi with none</text>
 <path class="gapbar" d="M507.9,126.0 L632.1,126.0"/>
 <text class="t-gap" x="570.0" y="137.0" text-anchor="middle">39 mi with none</text>
-<rect class="band-bg" x="8.0" y="154.0" width="984.0" height="20.0"/>
-<text class="t-lane" x="8.0" y="149.0">COUNTY</text>
-<rect class="s-cty-pa" x="8.00" y="154.0" width="44.97" height="20.0"><title>Potter County, Pennsylvania · RM 312.2–297.9</title></rect>
-<text class="t-cty" x="30.5" y="167.5" text-anchor="middle">Potter</text>
-<rect class="s-cty-pa" x="52.97" y="154.0" width="102.43" height="20.0"><title>McKean County, Pennsylvania · RM 297.9–265.4</title></rect>
-<text class="t-cty" x="104.2" y="167.5" text-anchor="middle">McKean</text>
-<rect class="s-cty-ny" x="155.40" y="154.0" width="165.11" height="20.0"><title>Cattaraugus County, New York · RM 265.4–213.1</title></rect>
-<text class="t-cty" x="238.0" y="167.5" text-anchor="middle">Cattaraugus</text>
-<rect class="s-cty-pa" x="320.52" y="154.0" width="154.34" height="20.0"><title>Warren County, Pennsylvania · RM 213.1–164.1</title></rect>
-<text class="t-cty" x="397.7" y="167.5" text-anchor="middle">Warren</text>
-<rect class="s-cty-pa" x="474.85" y="154.0" width="45.32" height="20.0"><title>Forest County, Pennsylvania · RM 164.1–149.7</title></rect>
-<text class="t-cty" x="497.5" y="167.5" text-anchor="middle">Forest</text>
-<rect class="s-cty-pa" x="520.17" y="154.0" width="189.22" height="20.0"><title>Venango County, Pennsylvania · RM 149.7–89.7</title></rect>
-<text class="t-cty" x="614.8" y="167.5" text-anchor="middle">Venango</text>
-<rect class="s-cty-pa" x="709.39" y="154.0" width="80.71" height="20.0"><title>Clarion County, Pennsylvania · RM 89.7–64.1</title></rect>
-<text class="t-cty" x="749.8" y="167.5" text-anchor="middle">Clarion</text>
-<rect class="s-cty-pa" x="790.11" y="154.0" width="107.03" height="20.0"><title>Armstrong County, Pennsylvania · RM 64.1–30.1</title></rect>
-<text class="t-cty" x="843.6" y="167.5" text-anchor="middle">Armstrong</text>
-<rect class="s-cty-pa" x="897.14" y="154.0" width="38.32" height="20.0"><title>Westmoreland County, Pennsylvania · RM 30.1–17.9</title></rect>
-<rect class="s-cty-pa" x="906.81" y="154.0" width="85.19" height="20.0"><title>Allegheny County, Pennsylvania · RM 27.0–0.0</title></rect>
-<text class="t-cty" x="949.4" y="167.5" text-anchor="middle">Allegheny</text>
-<line class="axis" x1="8.0" y1="188.0" x2="992.0" y2="188.0"/>
-<line class="axis" x1="992.0" y1="188.0" x2="992.0" y2="192.0"/>
-<text class="t-axis" x="992.0" y="203.0" text-anchor="middle">0</text>
-<line class="axis" x1="913.2" y1="188.0" x2="913.2" y2="192.0"/>
-<text class="t-axis" x="913.2" y="203.0" text-anchor="middle">25</text>
-<line class="axis" x1="834.4" y1="188.0" x2="834.4" y2="192.0"/>
-<text class="t-axis" x="834.4" y="203.0" text-anchor="middle">50</text>
-<line class="axis" x1="755.6" y1="188.0" x2="755.6" y2="192.0"/>
-<text class="t-axis" x="755.6" y="203.0" text-anchor="middle">75</text>
-<line class="axis" x1="676.8" y1="188.0" x2="676.8" y2="192.0"/>
-<text class="t-axis" x="676.8" y="203.0" text-anchor="middle">100</text>
-<line class="axis" x1="598.0" y1="188.0" x2="598.0" y2="192.0"/>
-<text class="t-axis" x="598.0" y="203.0" text-anchor="middle">125</text>
-<line class="axis" x1="519.3" y1="188.0" x2="519.3" y2="192.0"/>
-<text class="t-axis" x="519.3" y="203.0" text-anchor="middle">150</text>
-<line class="axis" x1="440.5" y1="188.0" x2="440.5" y2="192.0"/>
-<text class="t-axis" x="440.5" y="203.0" text-anchor="middle">175</text>
-<line class="axis" x1="361.7" y1="188.0" x2="361.7" y2="192.0"/>
-<text class="t-axis" x="361.7" y="203.0" text-anchor="middle">200</text>
-<line class="axis" x1="282.9" y1="188.0" x2="282.9" y2="192.0"/>
-<text class="t-axis" x="282.9" y="203.0" text-anchor="middle">225</text>
-<line class="axis" x1="204.1" y1="188.0" x2="204.1" y2="192.0"/>
-<text class="t-axis" x="204.1" y="203.0" text-anchor="middle">250</text>
-<line class="axis" x1="125.3" y1="188.0" x2="125.3" y2="192.0"/>
-<text class="t-axis" x="125.3" y="203.0" text-anchor="middle">275</text>
-<line class="axis" x1="46.5" y1="188.0" x2="46.5" y2="192.0"/>
-<text class="t-axis" x="46.5" y="203.0" text-anchor="middle">300</text>
-<text class="t-axis-lab" x="992.0" y="216.0" text-anchor="end">river mile — 0.0 at the mouth, increasing upstream</text>
+<rect class="band-bg" x="8.0" y="158.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="153.0">WATER TRAIL — WHO STEWARDS THE REACH</text>
+<rect class="s-trail-soft" x="164.38" y="158.0" width="156.13" height="20.0"><title>Allegheny River paddling reach (Enchanted Mountains) · promoted route - not a designated water trail · stewarded by Cattaraugus County Tourism (Enchanted Mountains of Western New York) (716-938-2242) · RM 262.6–213.1</title></rect>
+<text class="t-trail" x="242.4" y="171.5" text-anchor="middle">Cattaraugus County Tourism</text>
+<rect class="s-trail" x="363.72" y="158.0" width="354.08" height="20.0"><title>Middle Allegheny River Water Trail · Pennsylvania-designated water trail · stewarded by USDA Forest Service - Allegheny National Forest (814-723-5150) · RM 199.3–87.0</title></rect>
+<text class="t-trail" x="540.8" y="171.5" text-anchor="middle">Allegheny National Forest</text>
+<rect class="s-trail" x="708.32" y="158.0" width="189.73" height="20.0"><title>Middle Allegheny River Water Trail - Armstrong extension · Pennsylvania-designated water trail (2018) · stewarded by Experience Armstrong, Inc. (724-543-4003) · RM 90.0–29.8</title></rect>
+<text class="t-trail" x="803.2" y="171.5" text-anchor="middle">Experience Armstrong</text>
+<rect class="s-trail" x="921.84" y="158.0" width="70.16" height="20.0"><title>Three Rivers Water Trail · Pennsylvania-designated water trail; National Recreation Trail · stewarded by Friends of the Riverfront (412-488-0212) · RM 22.3–0.0</title></rect>
+<text class="t-trail-out" x="992.0" y="153.0" text-anchor="end">Friends of the Riverfront</text>
+<line class="leader-t" x1="956.9" y1="155.0" x2="956.9" y2="158.0"/>
+<text class="t-nosteward" x="86.2" y="171.5" text-anchor="middle">no steward</text>
+<rect class="band-bg" x="8.0" y="196.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="191.0">COUNTY</text>
+<rect class="s-cty-pa" x="8.00" y="196.0" width="44.97" height="20.0"><title>Potter County, Pennsylvania · RM 312.2–297.9</title></rect>
+<text class="t-cty" x="30.5" y="209.5" text-anchor="middle">Potter</text>
+<rect class="s-cty-pa" x="52.97" y="196.0" width="102.43" height="20.0"><title>McKean County, Pennsylvania · RM 297.9–265.4</title></rect>
+<text class="t-cty" x="104.2" y="209.5" text-anchor="middle">McKean</text>
+<rect class="s-cty-ny" x="155.40" y="196.0" width="165.11" height="20.0"><title>Cattaraugus County, New York · RM 265.4–213.1</title></rect>
+<text class="t-cty" x="238.0" y="209.5" text-anchor="middle">Cattaraugus</text>
+<rect class="s-cty-pa" x="320.52" y="196.0" width="154.34" height="20.0"><title>Warren County, Pennsylvania · RM 213.1–164.1</title></rect>
+<text class="t-cty" x="397.7" y="209.5" text-anchor="middle">Warren</text>
+<rect class="s-cty-pa" x="474.85" y="196.0" width="45.32" height="20.0"><title>Forest County, Pennsylvania · RM 164.1–149.7</title></rect>
+<text class="t-cty" x="497.5" y="209.5" text-anchor="middle">Forest</text>
+<rect class="s-cty-pa" x="520.17" y="196.0" width="189.22" height="20.0"><title>Venango County, Pennsylvania · RM 149.7–89.7</title></rect>
+<text class="t-cty" x="614.8" y="209.5" text-anchor="middle">Venango</text>
+<rect class="s-cty-pa" x="709.39" y="196.0" width="80.71" height="20.0"><title>Clarion County, Pennsylvania · RM 89.7–64.1</title></rect>
+<text class="t-cty" x="749.8" y="209.5" text-anchor="middle">Clarion</text>
+<rect class="s-cty-pa" x="790.11" y="196.0" width="107.03" height="20.0"><title>Armstrong County, Pennsylvania · RM 64.1–30.1</title></rect>
+<text class="t-cty" x="843.6" y="209.5" text-anchor="middle">Armstrong</text>
+<rect class="s-cty-pa" x="897.14" y="196.0" width="38.32" height="20.0"><title>Westmoreland County, Pennsylvania · RM 30.1–17.9</title></rect>
+<rect class="s-cty-pa" x="906.81" y="196.0" width="85.19" height="20.0"><title>Allegheny County, Pennsylvania · RM 27.0–0.0</title></rect>
+<text class="t-cty" x="949.4" y="209.5" text-anchor="middle">Allegheny</text>
+<line class="axis" x1="8.0" y1="230.0" x2="992.0" y2="230.0"/>
+<line class="axis" x1="992.0" y1="230.0" x2="992.0" y2="234.0"/>
+<text class="t-axis" x="992.0" y="245.0" text-anchor="middle">0</text>
+<line class="axis" x1="913.2" y1="230.0" x2="913.2" y2="234.0"/>
+<text class="t-axis" x="913.2" y="245.0" text-anchor="middle">25</text>
+<line class="axis" x1="834.4" y1="230.0" x2="834.4" y2="234.0"/>
+<text class="t-axis" x="834.4" y="245.0" text-anchor="middle">50</text>
+<line class="axis" x1="755.6" y1="230.0" x2="755.6" y2="234.0"/>
+<text class="t-axis" x="755.6" y="245.0" text-anchor="middle">75</text>
+<line class="axis" x1="676.8" y1="230.0" x2="676.8" y2="234.0"/>
+<text class="t-axis" x="676.8" y="245.0" text-anchor="middle">100</text>
+<line class="axis" x1="598.0" y1="230.0" x2="598.0" y2="234.0"/>
+<text class="t-axis" x="598.0" y="245.0" text-anchor="middle">125</text>
+<line class="axis" x1="519.3" y1="230.0" x2="519.3" y2="234.0"/>
+<text class="t-axis" x="519.3" y="245.0" text-anchor="middle">150</text>
+<line class="axis" x1="440.5" y1="230.0" x2="440.5" y2="234.0"/>
+<text class="t-axis" x="440.5" y="245.0" text-anchor="middle">175</text>
+<line class="axis" x1="361.7" y1="230.0" x2="361.7" y2="234.0"/>
+<text class="t-axis" x="361.7" y="245.0" text-anchor="middle">200</text>
+<line class="axis" x1="282.9" y1="230.0" x2="282.9" y2="234.0"/>
+<text class="t-axis" x="282.9" y="245.0" text-anchor="middle">225</text>
+<line class="axis" x1="204.1" y1="230.0" x2="204.1" y2="234.0"/>
+<text class="t-axis" x="204.1" y="245.0" text-anchor="middle">250</text>
+<line class="axis" x1="125.3" y1="230.0" x2="125.3" y2="234.0"/>
+<text class="t-axis" x="125.3" y="245.0" text-anchor="middle">275</text>
+<line class="axis" x1="46.5" y1="230.0" x2="46.5" y2="234.0"/>
+<text class="t-axis" x="46.5" y="245.0" text-anchor="middle">300</text>
+<text class="t-axis-lab" x="992.0" y="258.0" text-anchor="end">river mile — 0.0 at the mouth, increasing upstream</text>
 </svg></div>
     <figcaption>This is how a river is actually read. Every layer in the
     dataset keys to this axis, so any two of them join on position without a
     spatial operation. The middle band is the finding the rest of the
     project turned on: the green is everywhere along 312 miles
-    of river where the public may lawfully camp, reached from the water.
-    Scroll it sideways on a phone; on a desktop, hovering any band gives the
-    reach and the rule behind it.</figcaption>
+    of river where the public may lawfully camp, reached from the water. The
+    band below it answers a different question — who, if anyone, stewards the
+    reach you are standing in. Scroll it sideways on a phone; on a desktop,
+    hovering any band gives the reach, the rule and the steward behind
+    it.</figcaption>
   </figure>
+
+  <h2>Who stewards each reach</h2>
+  <p>A water trail grants nobody a right of access. What it gives a paddler is
+  a named body that signs the reach, keeps the launches open and will pick up
+  the phone about a closed one. That is the useful fact, and it is the one
+  that is hardest to find — Pennsylvania's published GIS maps
+  <b>one</b> of the four stewarded reaches below. The rest are real, and
+  unmapped.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Reach</th><th>Trail</th><th>Steward</th>
+      <th>Call</th><th>Guide</th></tr></thead>
+    <tbody>
+      <tr><td class="n">263–213<br><span class="q">50 mi</span></td><td>Allegheny River paddling reach (Enchanted Mountains)<br><span class="q">promoted route, not a designated trail</span></td><td>Cattaraugus County Tourism (Enchanted Mountains of Western New York)</td><td class="mono"><a href="tel:716-938-2242">716-938-2242</a></td><td><a href="https://enchantedmountains.com/paddling-allegheny-river" rel="noopener">enchantedmountains.com</a></td></tr>
+      <tr><td class="n">199–87<br><span class="q">112 mi</span></td><td>Middle Allegheny River Water Trail</td><td>USDA Forest Service - Allegheny National Forest<br><span class="q">with Oil Region Alliance (Oil Heritage Region) · 814-677-3152</span></td><td class="mono"><a href="tel:814-723-5150">814-723-5150</a></td><td><a href="https://pfbc.pa.gov/watertrails/alleg/trailguide.htm" rel="noopener">pfbc.pa.gov</a></td></tr>
+      <tr><td class="n">90–30<br><span class="q">60 mi</span></td><td>Middle Allegheny River Water Trail - Armstrong extension</td><td>Experience Armstrong, Inc.</td><td class="mono"><a href="tel:724-543-4003">724-543-4003</a></td><td><a href="https://www.armstrongcounty.com" rel="noopener">armstrongcounty.com</a></td></tr>
+      <tr><td class="n">22–0<br><span class="q">22 mi</span></td><td>Three Rivers Water Trail</td><td>Friends of the Riverfront</td><td class="mono"><a href="tel:412-488-0212">412-488-0212</a></td><td><a href="https://friendsoftheriverfront.org/three-rivers-water-trail/" rel="noopener">friendsoftheriverfront.org</a></td></tr>
+    </tbody>
+  </table></div>
+  <p><b>71 river miles have no steward at
+  all</b> — the RM&nbsp;312–263, RM&nbsp;213–199 and RM&nbsp;30–22. On those reaches there is no one whose job it is
+  to tell you a launch has washed out.</p>
 
   <h2>The river-mile convention</h2>
   <p>Everything is keyed to <b>river mile 0.0 at the mouth, increasing
@@ -608,7 +653,7 @@ font-family:"IBM Plex Mono",monospace}
       <tr><td><code>campgrounds</code></td><td class="n">84</td><td>Point</td></tr>
       <tr><td><code>nightly_stops</code></td><td class="n">24</td><td>Point</td></tr>
       <tr><td><code>towns</code></td><td class="n">39</td><td>Point</td></tr>
-      <tr><td><code>water_trails</code></td><td class="n">1</td><td>LineString</td></tr>
+      <tr><td><code>water_trails</code></td><td class="n">4</td><td>LineString</td></tr>
       <tr><td><code>kinzua_portage_route</code></td><td class="n">1</td><td>LineString</td></tr>
       <tr><td><code>river_traverse_mode</code></td><td class="n">3</td><td>LineString</td></tr>
       <tr><td><code>river_camping_legality</code></td><td class="n">113</td><td>LineString</td></tr>
@@ -618,10 +663,11 @@ font-family:"IBM Plex Mono",monospace}
       <tr><td><code>river_drone_restrictions</code></td><td class="n">8</td><td>LineString</td></tr>
       <tr><td><code>river_fish_advisories</code></td><td class="n">3</td><td>LineString</td></tr>
       <tr><td><code>river_counties</code></td><td class="n">10</td><td>LineString</td></tr>
+      <tr><td><code>water_trail_gaps</code></td><td class="n">3</td><td>LineString</td></tr>
       <tr><td><code>hospitals</code></td><td class="n">63</td><td>Point</td></tr>
       <tr><td><code>riparian_parcels</code></td><td class="n">52</td><td>Point</td></tr>
       <tr><td><code>river_mile_markers</code></td><td class="n">65</td><td>Point</td></tr>
-      <tr><td><code>dataset_metadata</code></td><td class="n">21</td><td>table</td></tr>
+      <tr><td><code>dataset_metadata</code></td><td class="n">22</td><td>table</td></tr>
     </tbody>
   </table></div>
   <p>Seven of those exist nowhere else. They were river-mile span tables —
@@ -629,18 +675,6 @@ font-family:"IBM Plex Mono",monospace}
   can be mapped and intersected: camping legality, measured public-land
   frontage, traverse mode, water quality, fishing regulations, drone
   restrictions and county extents.</p>
-
-  <h2>What is deliberately not here</h2>
-  <div class="note">
-    <p>The working dataset identifies riparian parcels for stretches with no
-    lawful public campsite, and for two counties those records carry owner
-    names and home mailing addresses. <b>Those are not republished here.</b>
-    They are public records, and looking one up to write and ask a landowner
-    for permission is proportionate. Aggregating them onto the open web
-    under a heading about where to camp is not.</p>
-    <p>Parcel identifiers, county and municipality are included, so anyone
-    can make their own enquiry through the county assessment office.</p>
-  </div>
 
   <h2>Use it</h2>
   <p>Drag the <code>.gpkg</code> into QGIS. Or:</p>

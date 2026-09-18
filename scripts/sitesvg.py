@@ -57,6 +57,20 @@ STRIP_TOWNS = ["Coudersport", "Eldred", "Olean", "Salamanca", "Warren",
                "Tionesta", "Franklin", "Emlenton", "Kittanning", "Pittsburgh"]
 
 
+SHORT_STEWARD = {
+    "Cattaraugus County Tourism (Enchanted Mountains of Western New York)":
+        "Cattaraugus County Tourism",
+    "USDA Forest Service - Allegheny National Forest":
+        "Allegheny National Forest",
+    "Experience Armstrong, Inc.": "Experience Armstrong",
+    "Friends of the Riverfront": "Friends of the Riverfront",
+}
+
+
+def short_steward(name: str) -> str:
+    return SHORT_STEWARD.get(name, name)
+
+
 def esc(s: str) -> str:
     return (str(s).replace("&", "&amp;").replace("<", "&lt;")
             .replace(">", "&gt;"))
@@ -241,12 +255,13 @@ def build_plan(ri, modes, lands, towns, barriers, putin, meta) -> str:
 
 STRIP_L, STRIP_R = 8.0, 8.0
 BAND_H = 20.0
-LANE_Y = {"mode": 62.0, "camp": 100.0, "county": 154.0}
-STRIP_H = 224.0
+LANE_Y = {"mode": 62.0, "camp": 100.0, "trail": 158.0,
+          "county": 196.0}
+STRIP_H = 266.0
 
 
 def build_strip(modes, intervals, frontage, counties, barriers, towns,
-                gaps, start_rm) -> str:
+                gaps, trails, trail_gaps, start_rm) -> str:
     x0, x1 = STRIP_L, STRIP_W - STRIP_R
     hi_rm, lo_rm = start_rm, 0.0
 
@@ -330,6 +345,39 @@ def build_strip(modes, intervals, frontage, counties, barriers, towns,
                        f'y="{y + 11:.1f}" text-anchor="middle">'
                        f'{float(r["length_mi"]):.0f} mi with none</text>')
 
+    # --- water-trail band --------------------------------------------------
+    band(LANE_Y["trail"], "WATER TRAIL — WHO STEWARDS THE REACH")
+    for _, r in trails.iterrows():
+        hi, lo = float(r["rm_hi"]), float(r["rm_lo"])
+        cls = "s-trail" if r["designated"] else "s-trail-soft"
+        seg(LANE_Y["trail"], hi, lo, cls,
+            f'{r["name"]} · {r["status"]} · stewarded by {r["steward"]} '
+            f'({r["steward_phone"]}) · RM {hi:.1f}–{lo:.1f}')
+        a, b = X(hi), X(lo)
+        lab = short_steward(str(r["steward"]))
+        if b - a > len(lab) * 4.8 + 8:
+            out.append(f'<text class="t-trail" x="{(a + b) / 2:.1f}" '
+                       f'y="{LANE_Y["trail"] + 13.5:.1f}" '
+                       f'text-anchor="middle">{esc(lab)}</text>')
+        else:
+            # too narrow to letter inside - caption it above, with a leader
+            anc = "end" if b > x1 - 90 else "middle"
+            tx = b if anc == "end" else (a + b) / 2
+            out.append(f'<text class="t-trail-out" x="{tx:.1f}" '
+                       f'y="{LANE_Y["trail"] - 5:.1f}" '
+                       f'text-anchor="{anc}">{esc(lab)}</text>')
+            out.append(f'<line class="leader-t" x1="{(a + b) / 2:.1f}" '
+                       f'y1="{LANE_Y["trail"] - 3:.1f}" '
+                       f'x2="{(a + b) / 2:.1f}" '
+                       f'y2="{LANE_Y["trail"]:.1f}"/>')
+
+    for _, r in trail_gaps.iterrows():
+        a, b = X(float(r["rm_hi"])), X(float(r["rm_lo"]))
+        if b - a > 52:
+            out.append(f'<text class="t-nosteward" x="{(a + b) / 2:.1f}" '
+                       f'y="{LANE_Y["trail"] + 13.5:.1f}" '
+                       f'text-anchor="middle">no steward</text>')
+
     # --- county band -------------------------------------------------------
     band(LANE_Y["county"], "COUNTY")
     cs = counties.sort_values("rm_hi", ascending=False).reset_index(drop=True)
@@ -378,12 +426,14 @@ def build() -> dict:
     frontage = pd.read_csv(config.PROC / "river_frontage.csv")
     counties = pd.read_csv(config.PROC / "route_counties.csv")
     gaps = pd.read_csv(config.PROC / "camping_gaps.csv")
+    trails = pd.read_csv(config.PROC / "water_trails.csv").fillna("")
+    tg = pd.read_csv(config.PROC / "water_trail_gaps.csv")
     start_rm = float(meta["start"]["river_mile"])
 
     plan = build_plan(ri, modes, lands, towns, barriers,
                       tp["recommended_putin"], meta)
     strip = build_strip(modes, intervals, frontage, counties, barriers, towns,
-                        gaps, start_rm)
+                        gaps, trails, tg, start_rm)
 
     mi = tp["in_channel_mode_miles"]
     facts = dict(
@@ -393,8 +443,11 @@ def build() -> dict:
         kinzua_rm=float(barriers[barriers["kind"] == "dam_portage"]
                         .iloc[0]["river_mile"]),
         locks=int((barriers["kind"] != "dam_portage").sum()),
+        trails=int(len(trails)),
+        trail_unstewarded_mi=round(float(tg["span_mi"].sum()), 0),
         start_rm=start_rm)
-    return dict(plan=plan, strip=strip, facts=facts)
+    return dict(plan=plan, strip=strip, facts=facts,
+                trails=trails)
 
 
 if __name__ == "__main__":
