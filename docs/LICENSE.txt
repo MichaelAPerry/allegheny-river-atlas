@@ -1,0 +1,35 @@
+Allegheny River Atlas
+Compiled 2026-09-18 by Michael Perry.
+
+THE COMPILATION
+The derived layers in this package - camping legality, measured public-land
+frontage, traverse mode, water quality extents, fishing regulation extents,
+drone restrictions and county extents along the river - are released under
+CC BY 4.0. Use them, change them, build on them; credit the compilation.
+
+THE SOURCES
+Underlying data remains under its own terms and must be attributed:
+
+  USGS - NHDPlus High Resolution, NWIS, The National Map, 3DEP
+         US Government work, public domain
+  US EPA - ATTAINS assessed waters
+         US Government work, public domain
+  USDA Forest Service - EDW ownership, wilderness, recreation sites
+         US Government work, public domain
+  PA Fish & Boat Commission, PA DCNR, PA Game Commission
+         via PASDA (Pennsylvania Spatial Data Access) - attribution required
+  NYSDEC - state land, parks, tax parcels, tribal territory boundary
+  County assessment offices - parcel identifiers
+  OpenStreetMap contributors - campgrounds and the Kinzua portage route
+         Open Database License (ODbL) - share-alike applies to these layers
+
+NOT INCLUDED
+Owner names and mailing addresses from county assessment records are
+deliberately excluded from this public release. Parcel identifiers are
+included so anyone may make their own enquiry through the county office.
+
+NO WARRANTY
+Camping legality classifications are an interpretation of published rules,
+not an agency determination. Flow-derived layers are median estimates, not
+measurements or forecasts. Verify anything you intend to rely on with the
+responsible agency or nation before acting on it.
