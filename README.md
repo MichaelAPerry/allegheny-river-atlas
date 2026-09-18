@@ -4,12 +4,19 @@ An open GIS dataset of the Allegheny River from its source in Potter County,
 Pennsylvania to the Point at Pittsburgh — **camping legality, public-land
 frontage, water quality and access, indexed by river mile**.
 
-**→ [Browse the dataset](https://michaelaperry.github.io/allegheny-river-atlas/)**
-**→ [Open the interactive map](https://michaelaperry.github.io/allegheny-river-atlas/map.html)**
+**→ [Paddling the Allegheny](https://michaelaperry.github.io/allegheny-river-atlas/)** —
+launches, legal camping, live USGS flow and who to ring, by river mile.
+**→ [Full atlas map](https://michaelaperry.github.io/allegheny-river-atlas/map.html)** —
+every layer, toggled separately.
 
-The map is one HTML file with no tiles, no images and no external requests.
-It opens offline, and it works behind a content-security policy that blocks
-third-party tile hosts.
+The atlas map is one HTML file with no tiles, no images and no external
+requests. It opens offline, and it works behind a content-security policy
+that blocks third-party tile hosts.
+
+**Know a launch that is not on here?** State and federal mapping lags badly
+on township ramps, club accesses and informal gravel bars.
+[Send it](../../issues/new?title=Launch%20or%20correction) — a town and a road
+name is enough.
 
 `docs/allegheny_river_atlas.gpkg` — one OGC GeoPackage, 23 layers, EPSG:4326,
 3 MB. Drag it into QGIS. Works in ArcGIS Pro, R `sf`, `geopandas`, GDAL/OGR.
