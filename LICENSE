@@ -1,21 +1,35 @@
-MIT License
+Allegheny River Atlas
+Compiled 2026-09-18 by Michael Perry.
 
-Copyright (c) 2026 Michael Perry
+THE COMPILATION
+The derived layers in this package - camping legality, measured public-land
+frontage, traverse mode, water quality extents, fishing regulation extents,
+drone restrictions and county extents along the river - are released under
+CC BY 4.0. Use them, change them, build on them; credit the compilation.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+THE SOURCES
+Underlying data remains under its own terms and must be attributed:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+  USGS - NHDPlus High Resolution, NWIS, The National Map, 3DEP
+         US Government work, public domain
+  US EPA - ATTAINS assessed waters
+         US Government work, public domain
+  USDA Forest Service - EDW ownership, wilderness, recreation sites
+         US Government work, public domain
+  PA Fish & Boat Commission, PA DCNR, PA Game Commission
+         via PASDA (Pennsylvania Spatial Data Access) - attribution required
+  NYSDEC - state land, parks, tax parcels, tribal territory boundary
+  County assessment offices - parcel identifiers
+  OpenStreetMap contributors - campgrounds and the Kinzua portage route
+         Open Database License (ODbL) - share-alike applies to these layers
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+NOT INCLUDED
+Owner names and mailing addresses from county assessment records are
+deliberately excluded from this public release. Parcel identifiers are
+included so anyone may make their own enquiry through the county office.
+
+NO WARRANTY
+Camping legality classifications are an interpretation of published rules,
+not an agency determination. Flow-derived layers are median estimates, not
+measurements or forecasts. Verify anything you intend to rely on with the
+responsible agency or nation before acting on it.
