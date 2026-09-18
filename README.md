@@ -5,6 +5,11 @@ Pennsylvania to the Point at Pittsburgh — **camping legality, public-land
 frontage, water quality and access, indexed by river mile**.
 
 **→ [Browse the dataset](https://michaelaperry.github.io/allegheny-river-atlas/)**
+**→ [Open the interactive map](https://michaelaperry.github.io/allegheny-river-atlas/map.html)**
+
+The map is one HTML file with no tiles, no images and no external requests.
+It opens offline, and it works behind a content-security policy that blocks
+third-party tile hosts.
 
 `docs/allegheny_river_atlas.gpkg` — one OGC GeoPackage, 22 layers, EPSG:4326,
 3 MB. Drag it into QGIS. Works in ArcGIS Pro, R `sf`, `geopandas`, GDAL/OGR.
@@ -91,5 +96,9 @@ and Kinzua portage layers. See [`LICENSE`](LICENSE).
 
 ## Rebuilding it
 
-Both scripts in `scripts/` rebuild the package from the full pipeline in the
-source project. Nothing here is hand-digitised and no figure is hand-entered.
+The scripts in `scripts/` rebuild the package and the site from the full
+pipeline in the source project: `22_package.py` cuts the analysis into the
+GeoPackage, `sitesvg.py` draws the two figures on the landing page straight
+from the processed data, and `23_publish_build.py` strips the personal columns
+and assembles `docs/`. Nothing here is hand-digitised and no figure is
+hand-entered.

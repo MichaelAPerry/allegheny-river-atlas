@@ -11,10 +11,18 @@ frontage, water quality and access, by river mile.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{--ground:#f6f5f1;--panel:#fffefb;--ink:#1b2023;--ink2:#5f6a70;
---ink3:#8d979c;--rule:#dedbd3;--water:#2d6b7c;--ok:#3e7a4b;--warn:#a6433b;}
+--ink3:#8d979c;--rule:#dedbd3;--water:#2d6b7c;--ok:#3e7a4b;--warn:#a6433b;
+--band:#e7e4dc;--m-float:#2d6b7c;--m-wade:#bf8a2c;--m-drag:#a6433b;
+--l-nf:#dde7d9;--l-wild:#c3d8bd;--l-sf:#e4ebe0;--l-sgl:#ece7d4;
+--l-sp:#d9e7ea;--l-trb:#eddfe6;--camp:#3e7a4b;--trb:#8d6a86;
+--cty-pa:#dcd8ce;--cty-ny:#cfd6d8;}
 @media (prefers-color-scheme:dark){:root{--ground:#15181b;--panel:#1c2125;
 --ink:#e8e6e0;--ink2:#a3adb2;--ink3:#6f797e;--rule:#2c3338;--water:#6ba8ba;
---ok:#6aa878;--warn:#d9756b;}}
+--ok:#6aa878;--warn:#d9756b;
+--band:#232a2f;--m-float:#6ba8ba;--m-wade:#d9a441;--m-drag:#d9756b;
+--l-nf:#1e2a22;--l-wild:#28392b;--l-sf:#222c25;--l-sgl:#2b2a22;
+--l-sp:#1e2a2d;--l-trb:#2c2129;--camp:#6aa878;--trb:#a4809c;
+--cty-pa:#272d31;--cty-ny:#20292d;}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);
 font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
@@ -59,6 +67,85 @@ color:var(--ink3)}
 footer{margin-top:56px;border-top:1px solid var(--rule);padding-block:28px 56px;
 color:var(--ink3);font-size:13.5px}
 a{color:var(--water)}
+
+/* figures - inline SVG, no images, no scripts, no external requests */
+figure{margin:30px 0 0}
+.figwrap{background:var(--panel);border:1px solid var(--rule);
+border-radius:10px;padding:16px 16px 12px}
+.fig{display:block;width:100%;height:auto;overflow:visible}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scrollx .strip{min-width:860px}
+.plan{max-width:520px;margin:0 auto}
+figcaption{color:var(--ink2);font-size:13.5px;margin-top:10px;
+padding-top:10px;border-top:1px solid var(--rule);max-width:none}
+.figh{margin:0 0 10px;font-size:15px;letter-spacing:.01em}
+.heroGrid{display:grid;grid-template-columns:1fr 218px;gap:18px;
+align-items:start}
+@media (max-width:640px){.heroGrid{grid-template-columns:1fr}}
+.leg{font-size:12.5px;line-height:1.5}
+.leg h4{margin:0 0 6px;font-size:10.5px;letter-spacing:.09em;
+text-transform:uppercase;color:var(--ink3);font-weight:600}
+.leg .grp{margin:0 0 14px}
+.leg .row{display:flex;align-items:baseline;gap:7px;margin:2px 0}
+.leg .sw{flex:0 0 14px;height:9px;border-radius:2px;
+border:1px solid var(--rule)}
+.leg .ln{flex:0 0 14px;height:3px;border-radius:2px}
+.leg .dot{flex:0 0 9px;height:9px;border-radius:50%;margin-left:2px}
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;
+color:var(--ink2);margin:0 0 14px}
+.key span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.key i{width:14px;height:9px;border-radius:2px;
+border:1px solid var(--rule)}
+.leg .mi{margin-left:auto;color:var(--ink3);
+font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+font-variant-numeric:tabular-nums}
+
+/* plan view */
+.plan .l-nf{fill:var(--l-nf)} .plan .l-wild{fill:var(--l-wild)}
+.plan .l-sf{fill:var(--l-sf)} .plan .l-sgl{fill:var(--l-sgl)}
+.plan .l-sp{fill:var(--l-sp)} .plan .l-trb{fill:var(--l-trb)}
+.plan .land path{stroke:none}
+.plan .river path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.plan .r-float{stroke:var(--m-float);stroke-width:2.6}
+.plan .r-wade{stroke:var(--m-wade);stroke-width:2.6}
+.plan .r-drag{stroke:var(--m-drag);stroke-width:2.6}
+.plan .border{stroke:var(--ink3);stroke-width:.8;stroke-dasharray:5 4}
+.plan .m-kinzua{fill:var(--m-drag);stroke:var(--panel);stroke-width:1.4}
+.plan .m-lock{fill:var(--ink2);stroke:var(--panel);stroke-width:1.2}
+.plan .m-putin{fill:none;stroke:var(--m-float);stroke-width:2.2}
+.plan .m-end{fill:var(--ink);stroke:var(--panel);stroke-width:1.6}
+.plan .m-town{fill:var(--ink3)}
+.plan text{font-family:"IBM Plex Sans",sans-serif}
+.plan .t-end{font-size:12px;font-weight:600;fill:var(--ink)}
+.plan .t-sub,.plan .t-rose{font-size:9px;fill:var(--ink3);
+font-family:"IBM Plex Mono",monospace}
+.plan .t-town{font-size:9.5px;fill:var(--ink2)}
+.plan .t-call{font-size:10.5px;font-weight:600;fill:var(--m-drag)}
+.plan .t-border{font-size:8.5px;letter-spacing:.12em;fill:var(--ink3)}
+.plan .rose line,.plan .scale line{stroke:var(--ink3);stroke-width:1}
+.plan .rose path{fill:var(--ink3)}
+.plan .leader{stroke:var(--m-drag);stroke-width:1}
+
+/* river-mile strip */
+.strip text{font-family:"IBM Plex Sans",sans-serif}
+.strip .band-bg{fill:var(--band)}
+.strip .s-float{fill:var(--m-float)} .strip .s-wade{fill:var(--m-wade)}
+.strip .s-drag{fill:var(--m-drag)}
+.strip .s-camp{fill:var(--camp)} .strip .s-tribal{fill:var(--trb)}
+.strip .s-cty-pa{fill:var(--cty-pa)} .strip .s-cty-ny{fill:var(--cty-ny)}
+.strip .t-lane{font-size:9px;letter-spacing:.09em;fill:var(--ink3);
+font-weight:600}
+.strip .t-cty{font-size:9px;fill:var(--ink2)}
+.strip .t-strip-town{font-size:10px;fill:var(--ink2)}
+.strip .tick-town{stroke:var(--rule);stroke-width:1}
+.strip .b-dam{fill:var(--m-drag)} .strip .b-lock{fill:var(--ink3)}
+.strip .t-call2{font-size:9.5px;font-weight:600;fill:var(--ink2)}
+.strip .gapbar{stroke:var(--warn);stroke-width:2.2;stroke-linecap:round}
+.strip .t-gap{font-size:9.5px;fill:var(--warn);font-weight:600}
+.strip .axis{stroke:var(--ink3);stroke-width:.8}
+.strip .t-axis{font-size:9px;fill:var(--ink3);
+font-family:"IBM Plex Mono",monospace}
+.strip .t-axis-lab{font-size:9.5px;fill:var(--ink3)}
 </style>
 </head>
 <body>
@@ -76,8 +163,253 @@ a{color:var(--water)}
 </div></header>
 
 <div class="wrap">
+  <figure class="figwrap">
+    <div class="heroGrid">
+      <div><svg class="fig plan" viewBox="0 0 520 512" role="img" aria-label="Plan map of the Allegheny River corridor from Coudersport, Pennsylvania to Pittsburgh, showing public land, in-channel traverse mode, dams and locks.">
+<g class="land">
+<path class="l-nf" d="M160.0,197.6L161.1,199.1L162.9,197.4L165.9,199.6L163.7,196.5L164.6,195.7L167.6,197.9L168.9,196.7L169.9,197.7L172.7,194.8L175.7,197.0L174.8,198.6L172.8,197.9L175.5,199.4L173.7,202.2L174.8,201.5L174.3,202.7L176.1,204.5L175.8,202.0L176.8,201.1L177.4,203.3L178.4,200.0L180.4,199.1L170.5,189.1L174.4,185.2L177.8,187.0L181.0,183.9L182.3,185.2L180.4,187.1L181.8,188.4L180.9,189.3L182.9,189.6L181.9,190.7L184.8,195.9L190.4,190.2L184.6,185.5L194.8,175.0L194.1,174.1L195.7,174.1L195.7,176.0L199.3,179.7L199.6,174.1L203.3,174.2L203.3,177.8L205.3,178.3L203.2,181.2L195.2,188.1L196.2,189.2L188.1,197.9L183.2,196.9L182.6,199.4L184.5,201.3L183.6,202.3L181.5,200.2L176.6,204.9L178.8,207.1L179.8,206.1L181.8,208.2L183.8,207.7L184.6,211.1L185.4,209.1L188.6,211.0L189.2,213.5L187.4,214.8L186.9,212.3L185.3,211.7L184.6,213.2L182.7,212.9L187.1,217.4L192.9,211.7L197.2,216.2L194.4,218.9L196.5,221.1L198.3,217.3L199.3,218.4L204.9,212.9L206.3,214.4L208.6,214.1L209.7,210.3L213.8,210.4L213.8,207.9L216.1,208.7L216.1,210.5L218.5,210.5L218.4,212.3L216.0,212.2L216.0,215.9L212.3,217.8L212.2,219.8L215.0,218.9L215.0,221.0L213.5,221.7L214.3,223.8L212.5,223.8L212.2,233.1L214.9,233.1L214.8,236.8L217.8,236.9L217.8,239.2L219.2,239.2L217.3,240.3L216.0,238.1L216.0,240.9L219.2,240.7L217.8,244.5L222.1,242.8L223.2,244.0L227.9,241.9L230.5,242.3L233.1,240.2L233.9,238.1L229.4,241.2L231.4,236.9L228.1,236.9L228.7,233.1L231.0,233.2L231.1,229.4L234.4,229.5L235.5,232.1L237.2,232.1L237.5,229.5L240.1,228.4L240.2,216.1L242.8,216.1L243.6,210.2L249.0,210.2L249.0,206.5L255.2,206.5L255.3,217.9L249.4,217.9L249.4,225.5L251.6,225.5L251.6,233.1L253.4,231.4L252.8,234.3L255.2,234.4L258.0,229.2L258.3,232.4L257.4,232.0L257.5,233.2L259.0,234.2L259.5,232.3L261.0,232.1L263.8,238.1L267.6,236.0L268.6,240.0L270.7,237.9L273.0,238.8L278.5,236.7L277.8,234.4L282.4,232.5L283.3,228.5L279.4,228.5L277.3,225.6L277.8,212.6L284.6,211.1L285.3,209.1L283.1,209.1L283.0,207.4L283.0,209.2L283.7,210.4L278.9,209.3L278.4,197.7L281.3,196.9L281.3,194.2L285.6,194.0L285.5,183.8L288.0,182.1L283.7,174.7L274.2,174.1L273.5,174.8L275.5,176.8L274.9,178.2L272.5,178.3L276.2,179.7L270.7,180.2L270.6,178.8L264.6,178.8L264.5,171.7L265.7,171.0L265.1,169.1L262.5,169.1L262.7,163.2L265.2,163.3L265.3,159.0L263.6,157.4L267.3,159.4L277.0,159.3L276.9,155.6L278.6,155.6L278.6,159.3L285.4,159.2L285.4,155.7L288.5,155.6L290.3,151.0L293.2,150.4L293.7,147.0L297.0,147.1L296.9,144.0L303.1,143.9L302.9,140.2L295.7,140.4L297.6,137.9L297.6,135.4L294.8,134.9L294.1,136.5L291.5,136.6L291.7,134.4L284.2,132.9L288.0,131.9L287.1,130.0L286.0,130.5L286.0,128.1L289.1,126.5L289.1,124.3L290.8,124.3L290.8,126.5L296.2,126.4L296.5,124.3L297.7,124.2L297.4,118.2L303.1,118.1L300.7,113.3L297.7,115.0L298.6,111.2L294.6,111.2L294.1,113.2L290.9,112.1L290.5,114.8L288.1,117.3L288.1,116.3L286.8,117.2L286.8,115.3L285.4,116.0L286.3,118.4L284.0,118.4L284.0,119.4L285.6,119.4L285.6,121.3L288.4,121.3L288.1,123.7L290.8,123.0L288.1,123.7L288.1,125.1L284.6,123.0L284.6,125.2L283.0,125.4L281.2,121.4L284.0,120.4L282.6,120.4L282.6,118.4L279.2,118.4L279.2,116.4L277.5,116.3L277.5,119.1L275.9,119.0L275.9,121.7L277.5,121.7L277.4,136.3L270.7,134.9L265.8,136.1L265.8,133.3L263.3,133.2L263.3,130.9L261.1,130.9L261.1,127.0L265.0,127.0L265.0,123.0L271.1,123.1L271.2,117.9L275.2,117.9L272.9,117.2L274.6,114.1L275.6,115.8L275.6,114.1L284.4,114.9L284.3,107.4L277.5,107.2L277.4,101.6L284.3,101.6L284.3,96.1L281.1,96.1L281.1,99.7L277.4,99.7L277.4,92.4L273.2,92.0L271.8,90.1L268.1,90.6L267.8,89.5L276.0,88.2L276.0,90.6L277.4,90.2L277.4,84.1L280.9,84.1L282.6,80.5L271.5,80.6L271.4,83.0L270.8,82.3L268.7,82.4L267.5,82.2L266.5,81.7L264.0,82.8L265.1,80.7L236.5,80.3L235.9,81.0L235.9,82.2L240.0,82.9L240.5,84.7L242.1,84.8L242.3,100.3L235.3,100.3L238.1,103.9L237.8,105.7L236.6,105.7L237.7,111.7L236.5,111.7L236.5,115.5L233.2,115.5L233.2,117.7L232.0,117.6L232.0,119.0L233.2,119.6L232.0,119.0L232.7,119.5L233.6,119.8L238.2,118.2L238.0,120.4L236.4,121.7L225.7,118.5L221.1,122.9L219.1,123.4L219.1,124.7L217.7,124.7L216.3,125.9L217.2,126.8L225.5,126.4L224.4,122.4L226.0,122.5L226.9,128.8L234.2,128.9L234.7,132.9L237.4,132.9L237.1,140.9L234.6,140.8L234.6,138.8L232.0,138.8L231.9,142.7L229.3,142.6L229.2,144.6L231.9,144.7L231.7,152.6L234.3,152.7L235.1,154.2L235.6,152.7L235.6,155.0L236.8,152.7L236.6,156.7L231.6,156.5L229.4,158.4L234.1,158.5L234.1,160.5L236.5,160.6L236.4,164.6L233.9,164.5L233.9,166.5L236.4,166.5L236.3,170.6L232.4,166.5L231.3,166.4L231.3,168.5L228.7,166.4L226.1,166.3L226.1,164.3L226.4,164.7L228.3,164.8L227.2,164.3L228.7,164.4L228.8,162.4L230.5,162.3L228.8,161.8L228.9,157.7L225.8,156.4L226.0,154.4L223.9,154.4L225.5,158.3L222.9,158.3L222.9,160.3L221.2,160.3L221.3,156.3L222.5,155.4L221.3,155.3L221.3,152.4L218.8,152.3L218.8,150.4L224.0,150.5L222.7,148.4L224.4,148.2L222.0,147.9L223.4,145.2L218.9,144.4L218.9,142.9L216.9,142.9L216.9,144.9L215.0,144.9L215.0,142.9L211.3,142.8L211.3,138.7L215.1,138.7L215.1,133.4L213.3,133.4L215.2,131.2L213.3,131.2L213.3,130.2L217.1,129.2L215.2,128.5L214.8,125.7L211.9,123.9L207.5,125.3L211.5,126.9L211.4,130.2L209.0,130.1L207.7,128.4L207.6,134.4L204.7,134.3L204.7,136.5L203.7,136.5L203.7,134.3L201.7,134.3L201.8,131.0L205.6,132.2L205.7,130.1L201.8,128.2L201.8,130.1L197.8,130.1L199.6,127.9L199.3,123.7L197.2,122.7L197.2,123.9L195.1,123.9L195.0,121.3L190.2,119.5L188.8,121.2L190.6,124.5L188.6,125.0L190.6,125.6L186.0,126.1L186.4,124.0L184.2,126.5L185.9,126.7L185.9,128.4L188.0,128.4L188.1,126.1L190.6,126.1L192.1,136.5L189.9,136.5L189.0,140.0L187.8,140.7L189.3,136.5L187.9,136.5L187.9,134.3L190.2,134.3L190.2,131.2L188.0,131.2L188.0,129.7L182.8,129.8L181.7,139.0L180.5,140.2L181.7,140.2L178.8,143.5L177.5,143.4L178.4,145.2L176.1,146.3L178.1,147.5L176.9,149.2L179.2,149.7L177.3,151.3L175.9,150.0L175.1,150.9L176.4,148.7L174.8,147.7L169.4,155.1L171.8,156.3L170.7,157.5L168.8,156.5L165.7,161.1L165.3,160.3L162.1,161.2L158.7,161.0L160.2,162.5L158.5,164.6L159.6,168.6L162.4,169.2L160.1,170.4L160.2,172.4L163.7,171.6L165.4,173.3L169.5,169.2L177.3,177.1L172.9,180.8L173.5,181.5L175.4,179.4L178.8,179.7L178.9,178.0L180.5,179.1L181.6,178.0L184.2,180.6L182.6,182.3L179.9,179.7L177.0,182.6L178.2,183.7L176.3,185.5L175.2,184.4L176.9,182.7L176.3,182.1L174.3,184.6L172.4,184.0L172.3,182.0L165.2,189.8L167.3,193.0L166.4,193.9L164.2,190.8L161.3,193.6L162.3,196.7L160.0,197.6Z"/>
+<path class="l-nf" d="M238.0,231.1L240.4,237.9L242.6,239.1L245.9,235.2L247.8,235.3L247.2,233.2L248.4,232.6L246.7,231.6L247.6,229.2L243.3,229.6L243.3,231.5L238.0,231.1Z"/>
+<path class="l-nf" d="M154.5,205.0L155.4,203.0L157.6,205.1L162.4,203.0L159.4,199.9L157.5,201.9L155.0,201.4L154.6,199.4L158.7,198.0L156.4,196.1L157.3,195.2L153.7,193.8L154.4,196.4L152.8,196.3L154.2,199.2L150.7,204.0L154.1,203.9L154.5,205.0Z"/>
+<path class="l-nf" d="M146.6,201.8L148.6,205.7L150.9,202.0L152.6,197.4L149.7,194.1L148.1,196.5L149.9,198.1L149.1,200.9L148.4,200.2L147.8,201.6L146.4,200.3L147.9,198.6L145.5,198.0L146.2,200.9L148.4,203.0L146.6,201.8Z"/>
+<path class="l-nf" d="M160.5,175.3L160.4,178.8L162.7,181.1L167.5,176.5L165.3,174.4L161.8,177.0L160.5,175.3Z"/>
+<path class="l-nf" d="M172.5,204.1L169.1,207.1L166.3,204.3L164.2,206.3L166.9,208.9L171.3,209.4L172.7,207.9L171.6,206.7L172.7,205.9L172.4,200.8L172.5,204.1Z"/>
+<path class="l-nf" d="M152.3,165.2L155.0,167.9L154.5,169.0L157.9,168.8L155.8,163.2L156.0,161.3L155.3,160.8L152.3,165.2Z"/>
+<path class="l-nf" d="M156.7,207.7L153.4,209.7L154.0,210.8L155.3,210.2L157.1,213.3L161.9,208.4L158.9,206.2L159.7,210.4L156.7,207.7Z"/>
+<path class="l-nf" d="M152.5,194.6L154.0,192.3L154.9,191.4L156.9,190.4L154.0,187.5L153.6,189.8L151.5,192.0L150.7,191.2L149.9,193.2L152.5,194.6Z"/>
+<path class="l-nf" d="M155.1,169.0L154.0,173.1L159.1,174.5L157.9,168.9L155.1,169.0Z"/>
+<path class="l-nf" d="M234.1,241.8L239.9,238.5L240.0,237.0L238.7,236.3L234.0,239.1L234.1,241.8Z"/>
+<path class="l-nf" d="M188.7,119.1L187.4,116.1L185.0,119.6L187.0,121.8L188.7,119.1Z"/>
+<path class="l-nf" d="M168.8,201.9L170.6,201.6L168.6,199.5L165.8,202.2L167.2,203.5L168.8,201.9Z"/>
+<path class="l-nf" d="M183.3,125.7L187.0,122.0L185.8,120.7L185.0,121.1L183.3,125.7Z"/>
+<path class="l-nf" d="M226.5,148.5L229.1,148.4L229.2,146.6L226.1,146.5L226.5,148.5Z"/>
+<path class="l-nf" d="M252.2,165.0L252.1,167.0L254.8,167.0L254.8,165.0L252.2,165.0Z"/>
+<path class="l-nf" d="M255.2,145.3L255.1,147.2L257.8,147.3L257.8,145.4L255.2,145.3Z"/>
+<path class="l-nf" d="M165.9,208.8L162.4,208.9L166.0,209.9L165.9,208.8Z"/>
+<path class="l-nf" d="M169.5,202.7L170.3,204.4L169.9,205.8L171.2,204.3L169.5,202.7Z"/>
+<path class="l-nf" d="M232.1,232.9L234.1,232.3L234.1,231.3L232.1,231.3L232.1,232.9Z"/>
+<path class="l-nf" d="M234.7,134.9L232.1,133.8L232.1,134.8L234.7,134.9Z"/>
+<path class="l-nf" d="M224.1,144.5L226.6,144.6L226.7,143.5L224.3,143.5L224.1,144.5Z"/>
+<path class="l-nf" d="M270.6,175.7L273.5,174.8L270.6,174.8L270.6,175.7Z"/>
+<path class="l-nf" d="M185.8,145.9L187.9,146.2L186.7,145.0L185.8,145.9Z"/>
+<path class="l-nf" d="M171.6,197.3L173.9,196.6L173.0,195.7L171.6,197.3Z"/>
+<path class="l-nf" d="M268.4,183.7L267.5,186.2L269.1,186.1L268.4,183.7Z"/>
+<path class="l-nf" d="M179.2,195.5L179.6,197.1L180.9,196.7L180.4,195.2L179.2,195.5Z"/>
+<path class="l-nf" d="M164.5,184.4L166.0,185.8L166.7,185.1L165.3,183.7L164.5,184.4Z"/>
+<path class="l-nf" d="M167.6,181.4L166.7,180.8L165.7,182.2L166.7,182.9L167.6,181.4Z"/>
+<path class="l-nf" d="M268.5,80.7L267.1,80.7L266.5,81.7L268.4,82.3L268.5,80.7Z"/>
+<path class="l-nf" d="M185.4,124.3L183.6,125.8L183.2,127.2L185.4,124.3Z"/>
+<path class="l-nf" d="M230.0,152.5L231.4,154.0L231.5,152.6L230.0,152.5Z"/>
+<path class="l-nf" d="M215.2,238.3L213.4,239.5L215.2,239.5L215.2,238.3Z"/>
+<path class="l-nf" d="M214.1,237.5L212.2,236.6L212.2,237.5L214.1,237.5Z"/>
+<path class="l-nf" d="M213.1,244.2L214.6,245.2L214.5,244.2L213.1,244.2Z"/>
+<path class="l-nf" d="M159.5,182.2L159.9,183.9L160.5,184.3L161.3,184.0L159.5,182.2Z"/>
+<path class="l-nf" d="M219.0,128.0L220.7,128.9L220.7,128.0L219.0,128.0Z"/>
+<path class="l-nf" d="M182.3,130.3L181.6,131.6L181.7,134.6L182.3,130.3Z"/>
+<path class="l-nf" d="M164.1,160.1L161.3,161.0L164.6,160.1L164.1,160.1Z"/>
+<path class="l-nf" d="M152.3,199.7L151.9,201.0L152.8,199.9L152.8,197.9L152.4,198.4L152.4,199.4L152.3,199.7Z"/>
+<path class="l-nf" d="M237.5,234.8L236.0,235.5L237.3,235.5L237.5,234.8Z"/>
+<path class="l-nf" d="M216.9,244.2L216.4,241.9L216.4,244.2L216.9,244.2Z"/>
+<path class="l-nf" d="M231.5,160.5L234.1,161.0L234.1,160.5L231.5,160.5Z"/>
+<path class="l-nf" d="M146.6,205.0L148.2,207.0L148.4,206.7L146.6,205.0Z"/>
+<path class="l-nf" d="M154.6,191.9L153.5,193.7L155.6,191.5L154.6,191.9Z"/>
+<path class="l-nf" d="M180.3,140.8L179.2,142.5L180.2,141.8L180.3,140.8Z"/>
+<path class="l-nf" d="M158.3,169.1L158.5,170.6L158.8,170.8L159.2,172.0L158.3,169.1Z"/>
+<path class="l-nf" d="M158.6,169.0L158.0,167.4L158.5,169.2L158.6,169.0Z"/>
+<path class="l-nf" d="M174.2,147.4L174.9,146.8L175.0,145.8L174.2,147.4Z"/>
+<path class="l-nf" d="M257.2,155.3L256.0,155.2L255.0,154.7L255.0,155.2L257.2,155.3Z"/>
+<path class="l-nf" d="M226.6,118.1L227.1,117.8L226.2,118.0L226.6,118.1Z"/>
+<path class="l-nf" d="M181.5,137.6L181.6,136.6L181.1,138.6L181.5,137.6Z"/>
+<path class="l-nf" d="M159.2,173.5L159.1,172.5L158.8,171.9L159.2,173.5Z"/>
+<path class="l-nf" d="M176.5,147.1L177.0,148.0L177.2,147.7L176.5,147.1Z"/>
+<path class="l-nf" d="M157.4,205.3L156.6,205.0L157.0,205.7L157.4,205.3Z"/>
+<path class="l-nf" d="M220.9,122.7L221.1,122.0L220.3,123.0L220.9,122.7Z"/>
+<path class="l-nf" d="M228.5,118.2L228.0,117.8L227.3,117.9L228.5,118.2Z"/>
+<path class="l-nf" d="M170.2,152.4L169.4,153.2L169.2,153.8L170.2,152.4Z"/>
+<path class="l-nf" d="M159.9,175.6L159.3,174.1L159.6,175.3L159.9,175.6Z"/>
+<path class="l-nf" d="M158.6,170.8L158.8,171.7L159.1,172.3L159.2,172.0L158.6,170.8Z"/>
+<path class="l-nf" d="M151.3,201.4L151.3,201.9L151.7,201.1L151.3,201.4Z"/>
+<path class="l-nf" d="M152.1,199.5L152.3,199.7L152.3,198.9L152.1,199.5Z"/>
+<path class="l-nf" d="M152.7,195.7L153.0,195.5L152.8,195.0L152.7,195.7Z"/>
+<path class="l-nf" d="M223.9,119.0L223.0,119.3L222.8,119.5L223.9,119.0Z"/>
+<path class="l-nf" d="M165.5,160.1L164.8,160.2L164.7,160.3L165.5,160.1Z"/>
+<path class="l-nf" d="M157.0,165.4L156.5,164.7L156.9,165.6L157.0,165.4Z"/>
+<path class="l-nf" d="M222.8,119.6L223.0,119.7L223.3,119.6L222.8,119.6Z"/>
+<path class="l-nf" d="M160.4,174.5L160.8,175.3L160.4,174.4L160.4,174.5Z"/>
+<path class="l-nf" d="M232.3,154.0L232.1,154.4L232.5,154.4L232.3,154.0Z"/>
+<path class="l-nf" d="M207.2,198.2L207.6,197.9L207.8,197.6L207.2,198.2Z"/>
+<path class="l-nf" d="M178.5,142.2L178.8,142.3L178.7,142.1L178.5,142.2Z"/>
+<path class="l-nf" d="M248.3,233.2L248.2,233.6L248.4,233.2L248.3,233.2Z"/>
+<path class="l-nf" d="M165.9,159.8L165.7,160.0L165.9,159.8L165.9,159.8Z"/>
+<path class="l-nf" d="M212.4,213.6L212.5,213.7L212.5,213.6L212.4,213.6Z"/>
+<path class="l-nf" d="M248.4,231.0L248.5,231.0L248.5,231.0L248.4,231.0Z"/>
+<path class="l-nf" d="M159.2,172.5L159.2,172.6L159.2,172.6L159.2,172.5Z"/>
+<path class="l-nf" d="M159.2,172.3L159.2,172.4L159.2,172.4L159.2,172.3Z"/>
+<path class="l-nf" d="M221.3,122.5L221.4,122.6L221.4,122.6L221.3,122.5Z"/>
+<path class="l-nf" d="M182.7,212.9L182.7,212.9L182.7,212.9L182.7,212.9Z"/>
+<path class="l-sf" d="M409.3,133.9L406.2,133.0L403.8,134.8L403.7,139.2L405.6,139.2L405.6,142.0L408.1,142.1L408.1,143.8L409.0,142.3L411.5,143.5L412.7,141.3L413.2,142.9L414.5,142.5L414.8,139.4L416.8,139.5L415.5,138.5L415.9,135.7L410.0,136.9L409.3,133.9Z"/>
+<path class="l-sf" d="M183.0,125.0L182.8,124.0L180.5,123.9L183.0,125.0Z"/>
+<path class="l-sf" d="M74.9,254.5L73.6,253.3L69.2,257.6L69.3,261.1L71.9,261.7L72.4,265.1L70.6,268.0L75.3,268.4L77.0,266.7L75.2,263.2L79.1,260.5L77.7,259.3L73.5,259.2L74.9,254.5Z"/>
+<path class="l-sf" d="M75.7,256.1L75.3,255.7L75.3,256.6L75.7,256.1Z"/>
+<path class="l-sgl" d="M411.4,145.1L410.2,145.2L411.5,143.9L411.4,145.1Z"/>
+<path class="l-sgl" d="M389.4,111.0L385.2,110.1L384.6,111.1L384.1,108.8L396.5,109.9L400.5,114.9L397.4,115.0L397.5,116.8L399.8,117.4L400.0,121.1L397.5,120.6L396.7,124.5L395.5,124.6L397.0,127.4L395.8,127.4L395.1,132.8L393.7,132.4L394.9,127.8L391.0,128.2L390.9,125.2L392.8,124.2L390.0,122.6L392.9,120.6L391.0,120.8L389.6,117.7L392.2,117.0L392.5,113.9L389.2,113.0L389.4,111.0Z"/>
+<path class="l-sgl" d="M384.9,113.0L388.0,114.2L388.2,116.4L386.7,117.5L388.1,119.9L386.4,119.9L384.8,116.8L384.9,113.0Z"/>
+<path class="l-sgl" d="M374.5,147.2L371.6,147.2L371.6,150.9L368.5,150.9L369.3,155.6L374.5,155.6L374.5,147.2Z"/>
+<path class="l-sgl" d="M377.8,146.5L377.2,145.8L377.1,146.5L377.8,146.5Z"/>
+<path class="l-sgl" d="M377.9,144.1L375.6,140.3L373.7,140.9L373.8,146.5L377.9,144.1Z"/>
+<path class="l-sgl" d="M366.5,123.8L356.8,126.2L356.9,129.3L355.4,127.8L354.6,134.5L360.5,134.6L360.6,139.9L365.8,139.9L366.4,136.9L364.7,133.7L367.7,131.9L368.0,133.9L369.2,133.8L368.3,132.4L370.8,129.4L369.6,127.8L368.5,128.5L368.8,126.0L367.1,126.4L368.0,125.9L366.5,123.8Z"/>
+<path class="l-sgl" d="M356.9,106.2L357.5,106.6L357.7,106.6L356.9,106.2Z"/>
+<path class="l-sgl" d="M353.6,105.3L354.0,107.9L354.4,106.4L356.4,106.6L356.6,110.1L358.0,107.1L356.6,107.2L356.2,105.3L353.6,105.3Z"/>
+<path class="l-sgl" d="M353.7,107.8L352.4,104.9L351.6,106.1L351.6,108.2L351.4,108.7L351.3,108.9L348.1,112.4L353.7,107.8Z"/>
+<path class="l-sgl" d="M352.2,105.2L351.1,105.2L351.2,108.0L349.4,107.6L349.7,109.8L351.4,108.8L351.6,106.2L352.2,105.2Z"/>
+<path class="l-sgl" d="M353.7,105.0L353.7,104.8L353.4,104.2L353.7,105.0Z"/>
+<path class="l-sgl" d="M352.9,104.2L352.9,104.5L353.2,104.3L352.9,104.2Z"/>
+<path class="l-sgl" d="M350.2,103.8L351.7,102.7L351.1,103.0L350.5,102.9L350.2,103.8Z"/>
+<path class="l-sgl" d="M353.7,102.3L353.6,102.5L353.7,102.3L353.7,102.3Z"/>
+<path class="l-sgl" d="M353.4,102.6L351.5,102.3L352.1,103.3L350.7,104.0L352.3,104.8L353.4,102.6Z"/>
+<path class="l-sgl" d="M350.7,102.7L351.5,102.7L351.5,102.2L350.7,102.7Z"/>
+<path class="l-sgl" d="M351.5,101.6L352.2,101.8L352.0,101.5L351.5,101.6Z"/>
+<path class="l-sgl" d="M351.1,101.5L351.5,101.6L351.5,101.0L351.1,101.5Z"/>
+<path class="l-sgl" d="M353.8,100.2L354.1,96.8L352.8,96.8L351.8,100.3L353.8,100.2Z"/>
+<path class="l-sgl" d="M353.5,94.0L352.3,94.7L354.0,96.1L354.1,95.9L353.5,94.0Z"/>
+<path class="l-sgl" d="M345.5,94.3L345.9,92.8L345.0,93.8L345.5,94.3Z"/>
+<path class="l-sgl" d="M353.0,93.3L352.2,92.7L351.6,93.4L350.6,92.9L351.7,94.2L353.0,93.3Z"/>
+<path class="l-sgl" d="M352.2,92.0L350.5,92.1L351.4,93.2L352.2,92.0Z"/>
+<path class="l-sgl" d="M351.7,89.6L352.0,89.6L352.1,89.5L351.7,89.6Z"/>
+<path class="l-sgl" d="M352.4,88.5L352.3,88.3L352.3,88.6L352.4,88.5Z"/>
+<path class="l-sgl" d="M349.5,88.4L347.4,88.2L348.7,88.9L347.8,90.1L349.5,88.4Z"/>
+<path class="l-sgl" d="M352.3,87.5L352.5,87.7L352.5,87.5L352.3,87.5Z"/>
+<path class="l-sgl" d="M345.3,87.4L347.2,87.9L347.4,87.3L345.3,87.4Z"/>
+<path class="l-sgl" d="M352.3,87.3L351.9,86.5L351.0,85.9L350.9,86.1L352.0,86.8L352.3,87.3Z"/>
+<path class="l-sgl" d="M350.3,88.4L351.9,86.8L350.4,85.9L350.3,85.4L350.0,85.4L350.3,88.4Z"/>
+<path class="l-sgl" d="M162.8,153.7L164.3,151.8L160.2,148.7L161.0,144.1L161.9,146.7L164.6,146.6L164.6,144.2L163.1,143.2L165.1,143.1L167.0,139.9L172.5,139.3L172.5,137.5L167.9,135.7L168.3,133.2L165.1,133.6L165.1,130.4L174.7,129.4L176.2,126.9L177.1,128.6L180.5,128.4L180.2,130.0L181.6,130.0L180.0,140.7L178.7,142.1L177.1,141.2L173.2,148.9L169.9,151.6L168.9,150.4L167.9,150.3L170.1,151.9L167.7,156.2L165.7,157.5L162.2,154.4L161.4,155.6L160.3,154.9L161.8,152.9L162.8,153.7Z"/>
+<path class="l-sgl" d="M150.0,163.2L149.8,166.6L151.0,166.6L156.0,160.5L152.5,157.7L151.4,159.5L152.2,163.3L150.0,163.2Z"/>
+<path class="l-sgl" d="M124.7,220.5L119.4,220.5L119.5,221.6L115.9,220.8L113.6,222.7L114.1,224.6L117.6,224.6L118.2,226.4L118.2,224.6L121.4,224.7L121.4,222.8L122.5,222.8L122.5,224.6L126.0,224.6L125.5,226.2L127.6,226.2L126.1,221.9L124.3,221.9L124.7,220.5Z"/>
+<path class="l-sgl" d="M126.3,336.8L122.8,343.3L124.7,345.4L124.2,347.0L127.4,347.9L126.3,344.2L128.6,344.2L127.5,342.1L128.6,342.1L126.4,341.3L126.3,336.8Z"/>
+<path class="l-sgl" d="M117.4,336.7L112.7,335.9L112.5,340.6L117.2,339.4L116.8,343.5L118.3,344.6L118.4,342.5L120.6,341.1L119.1,340.5L120.7,339.7L117.6,338.4L117.4,336.7Z"/>
+<path class="l-sgl" d="M119.6,324.0L116.7,323.4L116.6,326.6L119.6,325.3L119.6,324.0Z"/>
+<path class="l-sgl" d="M149.1,356.6L147.7,358.7L145.2,359.5L149.1,356.6Z"/>
+<path class="l-sgl" d="M148.2,355.8L148.2,352.4L149.9,353.7L150.3,352.7L148.5,352.1L148.7,350.1L150.1,351.2L151.3,351.1L149.9,352.0L150.7,352.0L151.2,352.1L151.0,353.5L152.6,353.6L153.0,356.2L148.2,355.8Z"/>
+<path class="l-sgl" d="M148.0,353.3L148.0,353.3L147.8,352.6L148.0,353.3Z"/>
+<path class="l-sgl" d="M149.9,350.6L149.7,349.8L150.2,349.9L149.9,350.6Z"/>
+<path class="l-sgl" d="M152.8,348.7L153.6,350.4L151.1,350.6L151.6,348.4L152.8,348.7Z"/>
+<path class="l-sgl" d="M148.6,349.0L148.2,349.2L148.8,349.0L148.6,349.0Z"/>
+<path class="l-sgl" d="M156.4,346.8L156.8,347.5L156.5,347.6L156.4,346.8Z"/>
+<path class="l-sgl" d="M150.8,342.1L150.7,347.0L153.0,347.9L154.0,349.5L154.4,351.0L153.8,349.3L151.8,347.6L151.3,348.5L151.4,349.3L150.1,348.2L150.2,349.9L149.2,349.0L148.7,348.9L148.1,349.1L146.3,347.5L147.2,346.0L148.9,346.7L149.0,342.4L150.8,342.1Z"/>
+<path class="l-sgl" d="M127.6,388.9L124.8,388.8L124.1,390.6L127.3,391.7L127.6,388.9Z"/>
+<path class="l-sgl" d="M136.0,386.9L135.9,386.8L135.4,387.7L135.6,387.6L136.0,387.1L136.0,386.9Z"/>
+<path class="l-sgl" d="M136.2,386.4L136.3,386.5L136.3,386.3L136.2,386.4Z"/>
+<path class="l-sp" d="M80.9,449.2L80.3,448.9L78.5,449.6L80.9,449.2Z"/>
+<path class="l-sp" d="M82.2,449.0L81.5,448.9L81.2,449.0L82.2,449.0Z"/>
+<path class="l-sp" d="M80.9,448.8L80.8,448.8L80.9,448.9L80.9,448.8Z"/>
+<path class="l-sp" d="M78.4,449.7L78.5,449.6L78.4,449.6L78.4,449.7Z"/>
+<path class="l-sp" d="M44.7,473.0L44.7,474.0L44.9,473.6L44.7,473.0Z"/>
+<path class="l-wild" d="M183.2,127.2L185.3,124.9L185.4,124.3L183.2,127.2Z"/>
+<path class="l-wild" d="M151.3,201.4L151.1,202.2L151.7,201.1L151.3,201.4Z"/>
+<path class="l-wild" d="M152.2,199.1L151.9,200.1L152.3,198.9L152.2,199.1Z"/>
+<path class="l-wild" d="M151.9,200.9L152.8,199.9L152.8,197.9L152.4,198.4L151.9,200.9Z"/>
+<path class="l-wild" d="M155.6,191.5L154.3,192.2L153.5,193.7L155.6,191.5Z"/>
+<path class="l-wild" d="M164.1,160.1L161.3,161.0L164.6,160.1L164.1,160.1Z"/>
+<path class="l-wild" d="M179.2,142.5L180.5,141.3L180.3,140.8L179.2,142.5Z"/>
+<path class="l-wild" d="M181.6,131.3L181.7,134.6L182.3,130.3L181.6,131.3Z"/>
+<path class="l-trb" d="M288.7,37.3L277.3,38.0L273.1,43.4L273.3,48.0L262.0,51.7L257.3,51.5L258.0,46.8L256.6,45.5L255.7,62.5L240.8,73.4L240.0,80.4L246.3,80.5L246.4,74.1L250.4,72.4L257.4,72.0L257.6,65.7L263.8,55.8L274.8,54.4L277.9,50.1L279.1,53.0L281.5,52.7L282.0,47.2L280.0,47.2L283.4,42.6L286.3,41.5L297.2,46.7L301.0,61.4L310.0,61.3L309.6,58.3L315.7,59.9L317.9,57.7L315.1,55.0L304.5,53.2L301.4,43.5L297.9,40.7L288.7,37.3Z"/>
+</g>
+<line class="border" x1="26.0" y1="80.3" x2="494.0" y2="80.3"/>
+<text class="t-border" x="490.0" y="75.3" text-anchor="end">NEW YORK</text>
+<text class="t-border" x="490.0" y="93.3" text-anchor="end">PENNSYLVANIA</text>
+<g class="river">
+<path class="r-drag" d="M421.5,137.4L419.1,139.7L417.0,140.4L416.7,141.2L415.2,141.3L414.6,143.6L412.4,143.4L411.0,145.5L408.7,145.6L408.2,144.8L406.0,144.0L404.9,142.0L403.4,141.4L403.5,140.7L402.6,140.7L402.0,139.7L401.3,139.7L399.6,136.6L394.3,135.8L393.1,134.8L391.1,134.3L391.3,133.4L390.2,132.8L388.8,132.8L386.5,134.8L385.3,132.9"/>
+<path class="r-wade" d="M385.3,132.9L383.4,133.2L382.9,132.8L381.9,133.5L380.4,133.3L378.9,134.2L376.7,132.1L374.7,131.2L373.6,129.7L370.8,128.7L369.6,126.6L369.7,124.2L368.7,123.0L367.9,123.1L366.9,122.4L366.8,121.3L366.2,121.4L366.9,120.6L366.3,118.6L365.0,118.5L364.8,117.6L363.3,116.7L363.2,117.7L361.8,117.5L359.7,114.3L360.3,113.5L359.4,112.8L359.1,113.2L357.8,111.5L357.1,111.2L356.8,111.6L356.1,110.9L355.7,109.8L356.5,108.7L356.3,106.6L354.5,106.5L354.8,107.2L354.1,107.5L354.3,108.0L353.4,106.8"/>
+<path class="r-float" d="M353.4,106.8L352.8,105.2L350.6,103.9L350.8,103.4L352.0,103.3L351.8,102.7L350.7,102.7L352.2,101.7L351.0,101.7L353.4,95.4L352.2,94.6L353.0,93.3L352.2,92.7L351.6,93.4L351.0,93.1L349.9,90.7L350.0,90.1L352.0,89.4L352.3,88.4L352.0,86.9L350.4,85.8L350.3,84.3L353.0,83.0L356.0,82.7L358.0,83.3L358.8,82.9L358.8,78.9L360.0,77.5L360.6,75.5L359.3,73.7L360.2,71.3L358.1,67.6L356.5,66.3L354.9,66.3L352.3,64.7L349.5,62.1L347.0,62.7L345.0,61.2L344.0,62.3L340.5,61.7L338.7,63.0L335.6,63.3L332.9,61.4L330.9,57.6L326.8,55.1L322.0,53.2L320.6,53.3L315.0,57.8L314.1,57.0L311.5,56.3L309.8,56.8L308.9,56.2L307.5,56.3L306.9,56.9L308.2,57.8L307.7,58.5L304.1,58.4L302.9,59.7L302.2,58.9L301.8,56.4L300.2,54.1L300.4,51.8L299.1,47.3L299.5,45.5L298.0,42.6L296.5,41.8L295.2,42.5L288.7,40.3L286.7,38.6L285.2,38.7L282.6,39.8L279.1,39.3L277.4,41.5L278.3,44.1L275.5,44.1L275.5,49.2L271.6,52.6L268.7,53.7L263.0,53.7L259.0,58.6L258.0,62.1L255.7,64.5L256.2,66.3L255.5,69.7L248.1,70.1L246.8,70.9L246.2,72.8L244.9,74.5L244.1,79.2L248.0,87.2L248.6,93.3L248.3,98.0L247.1,99.8L247.4,101.7L246.6,106.5L245.3,107.9L244.3,110.9L242.6,113.8L237.9,117.2L236.9,120.8L235.8,121.2L234.1,120.1L229.3,118.5L225.9,118.3L222.9,119.4L220.0,123.1L213.5,124.6L210.4,122.5L207.1,119.3L205.3,120.1L205.0,122.4L204.1,123.0L201.9,121.3L199.2,122.2L197.5,121.3L196.0,121.9L191.0,118.9L188.6,119.4L187.7,120.1L187.2,121.8L185.6,124.1L183.6,125.7L181.5,131.4L181.5,136.1L180.3,140.7L178.9,142.5L176.2,143.8L173.0,149.5L169.4,153.0L169.0,155.2L167.6,157.7L166.2,159.4L164.8,160.0L161.1,161.0L157.5,160.7L156.0,161.6L156.1,163.4L157.8,165.9L157.6,167.3L159.1,170.9L160.0,178.3L159.4,181.7L158.2,184.1L158.8,188.9L158.4,190.0L155.5,191.7L152.6,194.9L152.8,197.7L148.6,206.6L148.2,210.2L146.2,212.6L144.0,214.0L138.8,212.7L136.3,212.6L132.8,214.1L130.1,214.5L129.4,215.3L129.9,218.5L128.4,219.7L125.8,218.5L124.0,215.3L123.1,214.6L121.9,214.9L120.9,216.9L119.3,218.1L117.9,217.6L114.4,214.5L113.5,214.4L112.5,215.6L112.3,217.1L114.6,219.5L114.7,221.3L114.0,222.2L111.4,222.7L108.7,224.3L106.3,227.6L104.4,227.8L102.4,224.3L101.2,223.8L100.2,223.9L98.2,225.1L96.3,230.1L94.4,230.4L90.7,228.1L88.4,227.6L86.0,229.2L84.8,230.7L80.6,233.2L80.8,237.6L85.5,239.5L86.4,241.4L86.1,244.4L86.7,245.2L88.9,246.0L89.8,248.4L89.1,249.5L87.3,250.3L83.4,250.2L80.2,248.7L78.9,248.9L74.0,252.1L73.8,253.2L75.4,255.0L75.1,256.7L73.8,258.5L74.0,259.4L75.1,259.7L77.8,259.0L78.8,259.4L79.3,260.3L78.7,261.3L75.5,263.2L75.4,264.7L76.9,266.3L78.0,266.5L78.6,266.2L80.2,263.1L82.5,262.2L84.3,262.7L84.8,263.8L84.7,268.6L87.2,271.6L88.1,274.8L89.3,275.4L91.4,274.0L92.8,274.2L93.0,275.4L91.2,279.2L92.0,280.3L93.4,280.1L94.4,279.3L94.5,276.9L95.6,274.3L97.3,273.8L98.1,274.5L98.3,275.6L97.4,279.0L100.3,281.0L101.5,282.8L101.1,284.2L99.3,286.0L99.4,287.1L100.4,287.9L102.8,288.1L104.5,288.9L107.0,291.8L107.0,293.1L105.8,295.8L107.3,298.8L107.1,308.6L107.7,310.8L111.1,313.9L111.7,315.0L111.5,316.2L109.7,317.8L109.7,319.9L117.9,323.6L121.8,322.9L122.4,323.8L122.2,325.3L121.8,327.3L120.5,329.5L120.6,330.6L124.2,331.3L125.6,332.8L125.7,334.2L124.9,334.7L122.0,334.1L118.9,335.2L117.7,336.7L117.8,338.2L123.0,340.0L126.8,336.1L128.7,335.8L130.4,336.3L132.2,339.5L131.8,342.8L132.6,346.8L142.0,352.3L143.4,351.5L143.7,349.1L144.3,348.0L145.3,347.6L146.6,347.9L148.0,350.0L147.5,352.4L147.7,355.8L146.9,357.5L143.6,360.3L144.7,364.3L143.9,366.9L142.3,368.2L136.7,371.0L135.4,372.7L135.3,377.5L138.0,382.1L136.5,386.5L131.4,394.1L129.3,395.2L125.7,395.9L124.3,396.8L124.4,400.7L126.0,404.1L125.3,406.6L124.1,407.3L121.4,407.6L118.6,409.6L116.3,410.3L114.4,410.5L113.1,409.5L111.3,409.7L110.2,410.6L107.7,415.0L104.1,416.5L103.9,417.9L105.2,422.3L104.1,424.7L100.1,429.1L99.0,431.3L92.0,434.4L89.3,437.4L88.9,441.0L90.9,446.8L90.4,448.3L89.4,449.4L87.9,449.9L80.6,449.3L75.9,451.3L74.9,452.2L74.6,453.4L74.9,457.8L74.5,460.0L72.6,462.1L69.9,462.8L66.6,462.6L59.3,460.7L55.4,461.8L53.9,462.8L50.9,467.9L47.6,471.1L43.8,472.9"/>
+</g>
+<g class="marks">
+<circle class="m-kinzua" cx="235.5" cy="120.8" r="4.4"/>
+<circle class="m-lock" cx="132.0" cy="343.7" r="2.9"/>
+<circle class="m-lock" cx="144.9" cy="358.9" r="2.9"/>
+<circle class="m-lock" cx="135.6" cy="378.1" r="2.9"/>
+<circle class="m-lock" cx="126.0" cy="404.1" r="2.9"/>
+<circle class="m-lock" cx="109.4" cy="412.3" r="2.9"/>
+<circle class="m-lock" cx="99.8" cy="429.8" r="2.9"/>
+<circle class="m-lock" cx="80.8" cy="449.3" r="2.9"/>
+<circle class="m-lock" cx="62.1" cy="461.2" r="2.9"/>
+<circle class="m-putin" cx="351.0" cy="89.7" r="4"/>
+</g>
+<circle class="m-end" cx="421.4" cy="137.0" r="4.5"/>
+<text class="t-end" x="431.4" y="134.0" text-anchor="start">Coudersport</text>
+<text class="t-sub" x="431.4" y="146.0" text-anchor="start">RM 312.2</text>
+<circle class="m-end" cx="44.0" cy="473.4" r="4.5"/>
+<text class="t-end" x="54.0" y="472.4" text-anchor="start">Pittsburgh</text>
+<text class="t-sub" x="54.0" y="484.4" text-anchor="start">RM 0.0 · the Point</text>
+<g class="towns">
+<circle class="m-town" cx="343.4" cy="59.4" r="2.4"/>
+<text class="t-town" x="351.4" y="63.0" text-anchor="start">Olean</text>
+<circle class="m-town" cx="288.2" cy="38.9" r="2.4"/>
+<text class="t-town" x="280.2" y="35.9" text-anchor="end">Salamanca</text>
+<circle class="m-town" cx="212.8" cy="122.6" r="2.4"/>
+<text class="t-town" x="204.8" y="135.6" text-anchor="end">Warren</text>
+<circle class="m-town" cx="150.3" cy="205.4" r="2.4"/>
+<text class="t-town" x="158.3" y="209.0" text-anchor="start">Tionesta</text>
+<circle class="m-town" cx="78.2" cy="234.4" r="2.4"/>
+<text class="t-town" x="86.2" y="238.0" text-anchor="start">Franklin</text>
+<circle class="m-town" cx="101.7" cy="286.9" r="2.4"/>
+<text class="t-town" x="109.7" y="290.5" text-anchor="start">Emlenton</text>
+<circle class="m-town" cx="135.9" cy="376.9" r="2.4"/>
+<text class="t-town" x="143.9" y="380.5" text-anchor="start">Kittanning</text>
+</g>
+<text class="t-call" x="226.5" y="100.8" text-anchor="end">Kinzua Dam</text>
+<text class="t-sub" x="226.5" y="111.8" text-anchor="end">portage · RM 200.1</text>
+<line class="leader" x1="228.5" y1="107.8" x2="233.5" y2="116.8"/>
+<g class="rose"><line x1="490.0" y1="54.0" x2="490.0" y2="32.0"/><path d="M486.0,38.0 L490.0,32.0 L494.0,38.0 Z"/><text class="t-rose" x="490.0" y="65.0" text-anchor="middle">N</text></g>
+<g class="scale"><line x1="322.4" y1="440.0" x2="413.8" y2="440.0"/><line x1="322.4" y1="436.5" x2="322.4" y2="443.5"/><line x1="413.8" y1="436.5" x2="413.8" y2="443.5"/><text class="t-rose" x="419.8" y="443.5">25 mi</text></g>
+</svg></div>
+          <div class="leg">
+      <div class="grp"><h4>In-channel mode, July median flow</h4>
+        <div class="row"><i class="ln" style="background:var(--m-float)"></i>
+          Floatable<span class="mi">279 mi</span></div>
+        <div class="row"><i class="ln" style="background:var(--m-wade)"></i>
+          Wadeable<span class="mi">18.5 mi</span></div>
+        <div class="row"><i class="ln" style="background:var(--m-drag)"></i>
+          Below wading flow<span class="mi">15.0 mi</span></div>
+      </div>
+      <div class="grp"><h4>Public land</h4>
+        <div class="row"><i class="sw" style="background:var(--l-nf)"></i>
+          National Forest</div>
+        <div class="row"><i class="sw" style="background:var(--l-wild)"></i>
+          Designated Wilderness</div>
+        <div class="row"><i class="sw" style="background:var(--l-sf)"></i>
+          State Forest</div>
+        <div class="row"><i class="sw" style="background:var(--l-sgl)"></i>
+          State Game Land</div>
+        <div class="row"><i class="sw" style="background:var(--l-sp)"></i>
+          State Park</div>
+        <div class="row"><i class="sw" style="background:var(--l-trb)"></i>
+          Seneca Nation, Allegany Territory</div>
+      </div>
+      <div class="grp"><h4>On the water</h4>
+        <div class="row"><i class="dot" style="background:var(--m-drag)"></i>
+          Kinzua Dam — portage, RM 200</div>
+        <div class="row"><i class="dot" style="background:var(--ink3)"></i>
+          Lock &amp; Dam — 8, free to pass</div>
+        <div class="row"><i class="dot" style="background:none;
+          box-shadow:inset 0 0 0 2px var(--m-float)"></i>
+          First floatable public put-in</div>
+      </div>
+    </div>
+    </div>
+    <figcaption>The corridor, north up. The centerline is the USGS NHDPlus
+    High Resolution mainstem, coloured by whether July median discharge will
+    carry a loaded boat. The first 42 miles
+    below the source will not: that stretch is walked in the channel, and the
+    first public land where the river is floatable is
+    State Game Land 301 at RM 270.6.
+    <a href="map.html">Open the interactive version</a> for access points,
+    gages, campgrounds, the nightly stops and every layer toggled
+    separately.</figcaption>
+  </figure>
+
   <div class="dl">
-    <a class="btn primary" href="allegheny_river_atlas.gpkg" download>
+    <a class="btn primary" href="map.html"><b>Open the interactive map</b>
+      <span>Pan, zoom, toggle layers, click anything</span></a>
+    <a class="btn" href="allegheny_river_atlas.gpkg" download>
       <b>Download the GeoPackage</b><span>3.0 MB · EPSG:4326 ·
       opens in QGIS</span></a>
     <a class="btn" href="DATA_DICTIONARY.md"><b>Data dictionary</b>
@@ -85,6 +417,7 @@ a{color:var(--water)}
     <a class="btn" href="LICENSE.txt"><b>Licence &amp; attribution</b>
       <span>CC BY 4.0 compilation</span></a>
   </div>
+
 
   <h2>What this is</h2>
   <p>The Allegheny is well mapped as a <em>line</em> and poorly mapped as a
@@ -105,6 +438,152 @@ a{color:var(--water)}
     <li><b>Roughly 175 river miles — over half the route — carry a “Not
     Supporting” water-quality status</b> in EPA ATTAINS.</li>
   </ul>
+
+  <figure class="figwrap">
+    <h3 class="figh">The same 312 miles on one axis</h3>
+    <div class="key">
+      <span><i style="background:var(--m-float)"></i>Floatable</span>
+      <span><i style="background:var(--m-wade)"></i>Wadeable</span>
+      <span><i style="background:var(--m-drag)"></i>Below wading flow</span>
+      <span><i style="background:var(--camp)"></i>Legal public camping</span>
+      <span><i style="background:var(--trb)"></i>Seneca Nation — ask the
+        Nation</span>
+      <span><i style="background:var(--band)"></i>No lawful public
+        campsite</span>
+    </div>
+    <div class="scrollx"><svg class="fig strip" viewBox="0 0 1000 224" role="img" aria-label="The route as a single river-mile axis from river mile 312 at Coudersport to river mile 0 at Pittsburgh, banded by in-channel traverse mode, legal public camping and county.">
+<text class="t-strip-town" x="8.0" y="14" text-anchor="start">Coudersport</text>
+<line class="tick-town" x1="8.0" y1="19" x2="8.0" y2="62.0"/>
+<text class="t-strip-town" x="133.8" y="14" text-anchor="middle">Eldred</text>
+<line class="tick-town" x1="133.8" y1="19" x2="133.8" y2="62.0"/>
+<text class="t-strip-town" x="181.8" y="14" text-anchor="middle">Olean</text>
+<line class="tick-town" x1="181.8" y1="19" x2="181.8" y2="62.0"/>
+<text class="t-strip-town" x="255.3" y="14" text-anchor="middle">Salamanca</text>
+<line class="tick-town" x1="255.3" y1="19" x2="255.3" y2="62.0"/>
+<text class="t-strip-town" x="384.6" y="14" text-anchor="middle">Warren</text>
+<line class="tick-town" x1="384.6" y1="19" x2="384.6" y2="62.0"/>
+<text class="t-strip-town" x="505.5" y="14" text-anchor="middle">Tionesta</text>
+<line class="tick-town" x1="505.5" y1="19" x2="505.5" y2="62.0"/>
+<text class="t-strip-town" x="598.9" y="14" text-anchor="middle">Franklin</text>
+<line class="tick-town" x1="598.9" y1="19" x2="598.9" y2="62.0"/>
+<text class="t-strip-town" x="708.3" y="14" text-anchor="middle">Emlenton</text>
+<line class="tick-town" x1="708.3" y1="19" x2="708.3" y2="62.0"/>
+<text class="t-strip-town" x="847.1" y="14" text-anchor="middle">Kittanning</text>
+<line class="tick-town" x1="847.1" y1="19" x2="847.1" y2="62.0"/>
+<text class="t-strip-town" x="987.4" y="14" text-anchor="end">Pittsburgh</text>
+<line class="tick-town" x1="987.4" y1="19" x2="987.4" y2="62.0"/>
+<path class="b-lock" d="M970.9,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 2 (Highland Park) · RM 6.7</title></path>
+<path class="b-lock" d="M946.3,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 3 (Acmetonia) · RM 14.5</title></path>
+<path class="b-lock" d="M915.7,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 4 (Natrona) · RM 24.2</title></path>
+<path class="b-lock" d="M896.2,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 5 (Freeport) · RM 30.4</title></path>
+<path class="b-lock" d="M877.6,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 6 (Clinton) · RM 36.3</title></path>
+<path class="b-lock" d="M848.0,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 7 (Kittanning) · RM 45.7</title></path>
+<path class="b-lock" d="M826.2,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 8 (Templeton) · RM 52.6</title></path>
+<path class="b-lock" d="M796.0,58.0 l-4,-7 l8,0 Z"><title>Allegheny L/D 9 (Rimer/Mosgrove) · RM 62.2</title></path>
+<path class="b-dam" d="M361.5,58.0 l-4,-7 l8,0 Z"><title>Kinzua Dam (Allegheny Reservoir) · RM 200.1</title></path>
+<text class="t-call2" x="354.5" y="54.0" text-anchor="end">Kinzua Dam · portage</text>
+<text class="t-call2" x="785.0" y="54.0" text-anchor="end">8 locks</text>
+<rect class="band-bg" x="8.0" y="62.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="57.0">IN-CHANNEL MODE</text>
+<rect class="s-drag" x="8.06" y="62.0" width="47.27" height="20.0"><title>RM 312.2–297.2 · below wading flow — carry</title></rect>
+<rect class="s-wade" x="55.34" y="62.0" width="58.31" height="20.0"><title>RM 297.2–278.7 · wadeable — too thin to float</title></rect>
+<rect class="s-float" x="113.64" y="62.0" width="877.73" height="20.0"><title>RM 278.7–0.2 · floatable at July median flow</title></rect>
+<rect class="band-bg" x="8.0" y="100.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="95.0">LEGAL PUBLIC CAMPING FROM THE WATER</text>
+<rect class="s-tribal" x="211.34" y="100.0" width="109.77" height="20.0"><title>Allegany Indian Territory — the Nation, not a state agency, is the authority</title></rect>
+<rect class="s-camp" x="15.09" y="100.0" width="0.70" height="20.0"><title>Susquehannock State Forest · State Forest</title></rect>
+<rect class="s-camp" x="363.06" y="100.0" width="11.35" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="375.26" y="100.0" width="3.31" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="382.67" y="100.0" width="2.36" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="403.65" y="100.0" width="4.66" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="409.61" y="100.0" width="10.24" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="415.44" y="100.0" width="4.41" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="417.40" y="100.0" width="0.70" height="20.0"><title>Cornplanter State Forest · State Forest</title></rect>
+<rect class="s-camp" x="421.34" y="100.0" width="5.33" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="421.71" y="100.0" width="4.95" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="427.42" y="100.0" width="8.10" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="431.26" y="100.0" width="2.68" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="437.85" y="100.0" width="2.58" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="442.33" y="100.0" width="2.68" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="445.10" y="100.0" width="2.58" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="447.97" y="100.0" width="0.70" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="451.69" y="100.0" width="8.45" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="453.95" y="100.0" width="4.07" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="461.83" y="100.0" width="4.57" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="467.16" y="100.0" width="9.27" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="476.68" y="100.0" width="1.48" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="478.35" y="100.0" width="0.85" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="481.44" y="100.0" width="0.85" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="490.20" y="100.0" width="16.55" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="491.52" y="100.0" width="3.62" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="498.05" y="100.0" width="5.14" height="20.0"><title>Allegheny Islands Wilderness · Designated Wilderness</title></rect>
+<rect class="s-camp" x="506.74" y="100.0" width="1.20" height="20.0"><title>Allegheny National Forest · National Forest</title></rect>
+<rect class="s-camp" x="632.15" y="100.0" width="20.33" height="20.0"><title>Clear Creek State Forest · State Forest</title></rect>
+<rect class="s-camp" x="634.61" y="100.0" width="1.95" height="20.0"><title>Clear Creek State Forest · State Forest</title></rect>
+<path class="gapbar" d="M15.7,126.0 L363.1,126.0"/>
+<text class="t-gap" x="189.4" y="137.0" text-anchor="middle">110 mi with none</text>
+<path class="gapbar" d="M652.5,126.0 L991.3,126.0"/>
+<text class="t-gap" x="821.9" y="137.0" text-anchor="middle">108 mi with none</text>
+<path class="gapbar" d="M507.9,126.0 L632.1,126.0"/>
+<text class="t-gap" x="570.0" y="137.0" text-anchor="middle">39 mi with none</text>
+<rect class="band-bg" x="8.0" y="154.0" width="984.0" height="20.0"/>
+<text class="t-lane" x="8.0" y="149.0">COUNTY</text>
+<rect class="s-cty-pa" x="8.00" y="154.0" width="44.97" height="20.0"><title>Potter County, Pennsylvania · RM 312.2–297.9</title></rect>
+<text class="t-cty" x="30.5" y="167.5" text-anchor="middle">Potter</text>
+<rect class="s-cty-pa" x="52.97" y="154.0" width="102.43" height="20.0"><title>McKean County, Pennsylvania · RM 297.9–265.4</title></rect>
+<text class="t-cty" x="104.2" y="167.5" text-anchor="middle">McKean</text>
+<rect class="s-cty-ny" x="155.40" y="154.0" width="165.11" height="20.0"><title>Cattaraugus County, New York · RM 265.4–213.1</title></rect>
+<text class="t-cty" x="238.0" y="167.5" text-anchor="middle">Cattaraugus</text>
+<rect class="s-cty-pa" x="320.52" y="154.0" width="154.34" height="20.0"><title>Warren County, Pennsylvania · RM 213.1–164.1</title></rect>
+<text class="t-cty" x="397.7" y="167.5" text-anchor="middle">Warren</text>
+<rect class="s-cty-pa" x="474.85" y="154.0" width="45.32" height="20.0"><title>Forest County, Pennsylvania · RM 164.1–149.7</title></rect>
+<text class="t-cty" x="497.5" y="167.5" text-anchor="middle">Forest</text>
+<rect class="s-cty-pa" x="520.17" y="154.0" width="189.22" height="20.0"><title>Venango County, Pennsylvania · RM 149.7–89.7</title></rect>
+<text class="t-cty" x="614.8" y="167.5" text-anchor="middle">Venango</text>
+<rect class="s-cty-pa" x="709.39" y="154.0" width="80.71" height="20.0"><title>Clarion County, Pennsylvania · RM 89.7–64.1</title></rect>
+<text class="t-cty" x="749.8" y="167.5" text-anchor="middle">Clarion</text>
+<rect class="s-cty-pa" x="790.11" y="154.0" width="107.03" height="20.0"><title>Armstrong County, Pennsylvania · RM 64.1–30.1</title></rect>
+<text class="t-cty" x="843.6" y="167.5" text-anchor="middle">Armstrong</text>
+<rect class="s-cty-pa" x="897.14" y="154.0" width="38.32" height="20.0"><title>Westmoreland County, Pennsylvania · RM 30.1–17.9</title></rect>
+<rect class="s-cty-pa" x="906.81" y="154.0" width="85.19" height="20.0"><title>Allegheny County, Pennsylvania · RM 27.0–0.0</title></rect>
+<text class="t-cty" x="949.4" y="167.5" text-anchor="middle">Allegheny</text>
+<line class="axis" x1="8.0" y1="188.0" x2="992.0" y2="188.0"/>
+<line class="axis" x1="992.0" y1="188.0" x2="992.0" y2="192.0"/>
+<text class="t-axis" x="992.0" y="203.0" text-anchor="middle">0</text>
+<line class="axis" x1="913.2" y1="188.0" x2="913.2" y2="192.0"/>
+<text class="t-axis" x="913.2" y="203.0" text-anchor="middle">25</text>
+<line class="axis" x1="834.4" y1="188.0" x2="834.4" y2="192.0"/>
+<text class="t-axis" x="834.4" y="203.0" text-anchor="middle">50</text>
+<line class="axis" x1="755.6" y1="188.0" x2="755.6" y2="192.0"/>
+<text class="t-axis" x="755.6" y="203.0" text-anchor="middle">75</text>
+<line class="axis" x1="676.8" y1="188.0" x2="676.8" y2="192.0"/>
+<text class="t-axis" x="676.8" y="203.0" text-anchor="middle">100</text>
+<line class="axis" x1="598.0" y1="188.0" x2="598.0" y2="192.0"/>
+<text class="t-axis" x="598.0" y="203.0" text-anchor="middle">125</text>
+<line class="axis" x1="519.3" y1="188.0" x2="519.3" y2="192.0"/>
+<text class="t-axis" x="519.3" y="203.0" text-anchor="middle">150</text>
+<line class="axis" x1="440.5" y1="188.0" x2="440.5" y2="192.0"/>
+<text class="t-axis" x="440.5" y="203.0" text-anchor="middle">175</text>
+<line class="axis" x1="361.7" y1="188.0" x2="361.7" y2="192.0"/>
+<text class="t-axis" x="361.7" y="203.0" text-anchor="middle">200</text>
+<line class="axis" x1="282.9" y1="188.0" x2="282.9" y2="192.0"/>
+<text class="t-axis" x="282.9" y="203.0" text-anchor="middle">225</text>
+<line class="axis" x1="204.1" y1="188.0" x2="204.1" y2="192.0"/>
+<text class="t-axis" x="204.1" y="203.0" text-anchor="middle">250</text>
+<line class="axis" x1="125.3" y1="188.0" x2="125.3" y2="192.0"/>
+<text class="t-axis" x="125.3" y="203.0" text-anchor="middle">275</text>
+<line class="axis" x1="46.5" y1="188.0" x2="46.5" y2="192.0"/>
+<text class="t-axis" x="46.5" y="203.0" text-anchor="middle">300</text>
+<text class="t-axis-lab" x="992.0" y="216.0" text-anchor="end">river mile — 0.0 at the mouth, increasing upstream</text>
+</svg></div>
+    <figcaption>This is how a river is actually read. Every layer in the
+    dataset keys to this axis, so any two of them join on position without a
+    spatial operation. The middle band is the finding the rest of the
+    project turned on: the green is everywhere along 312 miles
+    of river where the public may lawfully camp, reached from the water.
+    Scroll it sideways on a phone; on a desktop, hovering any band gives the
+    reach and the rule behind it.</figcaption>
+  </figure>
 
   <h2>The river-mile convention</h2>
   <p>Everything is keyed to <b>river mile 0.0 at the mouth, increasing

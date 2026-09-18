@@ -23,7 +23,8 @@ the proper channel - and drops the name and address columns. The full version
 stays local for the trip's own use.
 
 Outputs
-  docs/index.html
+  docs/index.html                      with an inline SVG plan map and river-mile strip
+  docs/map.html                        the full interactive map, self-contained
   docs/allegheny_river_atlas.gpkg      public build, no personal data
   docs/DATA_DICTIONARY.md
   docs/LICENSE.txt
@@ -43,12 +44,49 @@ import pyogrio
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common
 import config
+import sitesvg
 
 DOCS = config.ROOT / "docs"
 SRC_GPKG = config.OUT / "allegheny_river_atlas.gpkg"
 PUB_GPKG = DOCS / "allegheny_river_atlas.gpkg"
 REDACT = {"owner", "owner_address"}
 TODAY = dt.date.today().isoformat()
+
+
+LEGEND = """\
+    <div class="leg">
+      <div class="grp"><h4>In-channel mode, July median flow</h4>
+        <div class="row"><i class="ln" style="background:var(--m-float)"></i>
+          Floatable<span class="mi">{float_mi:.0f} mi</span></div>
+        <div class="row"><i class="ln" style="background:var(--m-wade)"></i>
+          Wadeable<span class="mi">{wade_mi:.1f} mi</span></div>
+        <div class="row"><i class="ln" style="background:var(--m-drag)"></i>
+          Below wading flow<span class="mi">{drag_mi:.1f} mi</span></div>
+      </div>
+      <div class="grp"><h4>Public land</h4>
+        <div class="row"><i class="sw" style="background:var(--l-nf)"></i>
+          National Forest</div>
+        <div class="row"><i class="sw" style="background:var(--l-wild)"></i>
+          Designated Wilderness</div>
+        <div class="row"><i class="sw" style="background:var(--l-sf)"></i>
+          State Forest</div>
+        <div class="row"><i class="sw" style="background:var(--l-sgl)"></i>
+          State Game Land</div>
+        <div class="row"><i class="sw" style="background:var(--l-sp)"></i>
+          State Park</div>
+        <div class="row"><i class="sw" style="background:var(--l-trb)"></i>
+          Seneca Nation, Allegany Territory</div>
+      </div>
+      <div class="grp"><h4>On the water</h4>
+        <div class="row"><i class="dot" style="background:var(--m-drag)"></i>
+          Kinzua Dam — portage, RM {kinzua_rm:.0f}</div>
+        <div class="row"><i class="dot" style="background:var(--ink3)"></i>
+          Lock &amp; Dam — {locks}, free to pass</div>
+        <div class="row"><i class="dot" style="background:none;
+          box-shadow:inset 0 0 0 2px var(--m-float)"></i>
+          First floatable public put-in</div>
+      </div>
+    </div>"""
 
 
 def build_public_gpkg() -> list[tuple[str, int, str]]:
@@ -92,6 +130,29 @@ def main() -> None:
     written = build_public_gpkg()
 
     shutil.copy(config.OUT / "DATA_DICTIONARY.md", DOCS / "DATA_DICTIONARY.md")
+
+    # The interactive map is already self-contained - no tiles, no images,
+    # no external requests - so it drops onto a static host unchanged. The one
+    # thing it lacks as a standalone file is a way back, which only exists once
+    # it sits beside index.html, so the link is added on the way in.
+    m = (config.OUT / "map.html").read_text(encoding="utf-8")
+    back = ('<a class="back" href="./">&larr; Atlas</a>\n'
+            '    <h1>Allegheny Descent</h1>')
+    assert "<h1>Allegheny Descent</h1>" in m
+    m = m.replace("<h1>Allegheny Descent</h1>", back, 1)
+    m = m.replace(".head .sub{",
+                  ".head .back{color:var(--ink-2);text-decoration:none;"
+                  "font-size:12.5px;border:1px solid var(--rule);"
+                  "border-radius:6px;padding:4px 9px;white-space:nowrap}\n"
+                  ".head .back:hover{color:var(--ink);border-color:var(--ink-3)}\n"
+                  ".head .sub{", 1)
+    (DOCS / "map.html").write_text(m, encoding="utf-8")
+
+    print("  drawing the landing-page figures ...")
+    figs = sitesvg.build()
+    f = figs["facts"]
+    legend = LEGEND.format(**f)
+
 
     (DOCS / "LICENSE.txt").write_text(f"""Allegheny River Atlas
 Compiled {TODAY} by Michael Perry.
@@ -151,10 +212,18 @@ frontage, water quality and access, by river mile.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{{--ground:#f6f5f1;--panel:#fffefb;--ink:#1b2023;--ink2:#5f6a70;
---ink3:#8d979c;--rule:#dedbd3;--water:#2d6b7c;--ok:#3e7a4b;--warn:#a6433b;}}
+--ink3:#8d979c;--rule:#dedbd3;--water:#2d6b7c;--ok:#3e7a4b;--warn:#a6433b;
+--band:#e7e4dc;--m-float:#2d6b7c;--m-wade:#bf8a2c;--m-drag:#a6433b;
+--l-nf:#dde7d9;--l-wild:#c3d8bd;--l-sf:#e4ebe0;--l-sgl:#ece7d4;
+--l-sp:#d9e7ea;--l-trb:#eddfe6;--camp:#3e7a4b;--trb:#8d6a86;
+--cty-pa:#dcd8ce;--cty-ny:#cfd6d8;}}
 @media (prefers-color-scheme:dark){{:root{{--ground:#15181b;--panel:#1c2125;
 --ink:#e8e6e0;--ink2:#a3adb2;--ink3:#6f797e;--rule:#2c3338;--water:#6ba8ba;
---ok:#6aa878;--warn:#d9756b;}}}}
+--ok:#6aa878;--warn:#d9756b;
+--band:#232a2f;--m-float:#6ba8ba;--m-wade:#d9a441;--m-drag:#d9756b;
+--l-nf:#1e2a22;--l-wild:#28392b;--l-sf:#222c25;--l-sgl:#2b2a22;
+--l-sp:#1e2a2d;--l-trb:#2c2129;--camp:#6aa878;--trb:#a4809c;
+--cty-pa:#272d31;--cty-ny:#20292d;}}}}
 *{{box-sizing:border-box}}
 body{{margin:0;background:var(--ground);color:var(--ink);
 font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
@@ -199,6 +268,85 @@ color:var(--ink3)}}
 footer{{margin-top:56px;border-top:1px solid var(--rule);padding-block:28px 56px;
 color:var(--ink3);font-size:13.5px}}
 a{{color:var(--water)}}
+
+/* figures - inline SVG, no images, no scripts, no external requests */
+figure{{margin:30px 0 0}}
+.figwrap{{background:var(--panel);border:1px solid var(--rule);
+border-radius:10px;padding:16px 16px 12px}}
+.fig{{display:block;width:100%;height:auto;overflow:visible}}
+.scrollx{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
+.scrollx .strip{{min-width:860px}}
+.plan{{max-width:520px;margin:0 auto}}
+figcaption{{color:var(--ink2);font-size:13.5px;margin-top:10px;
+padding-top:10px;border-top:1px solid var(--rule);max-width:none}}
+.figh{{margin:0 0 10px;font-size:15px;letter-spacing:.01em}}
+.heroGrid{{display:grid;grid-template-columns:1fr 218px;gap:18px;
+align-items:start}}
+@media (max-width:640px){{.heroGrid{{grid-template-columns:1fr}}}}
+.leg{{font-size:12.5px;line-height:1.5}}
+.leg h4{{margin:0 0 6px;font-size:10.5px;letter-spacing:.09em;
+text-transform:uppercase;color:var(--ink3);font-weight:600}}
+.leg .grp{{margin:0 0 14px}}
+.leg .row{{display:flex;align-items:baseline;gap:7px;margin:2px 0}}
+.leg .sw{{flex:0 0 14px;height:9px;border-radius:2px;
+border:1px solid var(--rule)}}
+.leg .ln{{flex:0 0 14px;height:3px;border-radius:2px}}
+.leg .dot{{flex:0 0 9px;height:9px;border-radius:50%;margin-left:2px}}
+.key{{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;
+color:var(--ink2);margin:0 0 14px}}
+.key span{{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}}
+.key i{{width:14px;height:9px;border-radius:2px;
+border:1px solid var(--rule)}}
+.leg .mi{{margin-left:auto;color:var(--ink3);
+font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+font-variant-numeric:tabular-nums}}
+
+/* plan view */
+.plan .l-nf{{fill:var(--l-nf)}} .plan .l-wild{{fill:var(--l-wild)}}
+.plan .l-sf{{fill:var(--l-sf)}} .plan .l-sgl{{fill:var(--l-sgl)}}
+.plan .l-sp{{fill:var(--l-sp)}} .plan .l-trb{{fill:var(--l-trb)}}
+.plan .land path{{stroke:none}}
+.plan .river path{{fill:none;stroke-linecap:round;stroke-linejoin:round}}
+.plan .r-float{{stroke:var(--m-float);stroke-width:2.6}}
+.plan .r-wade{{stroke:var(--m-wade);stroke-width:2.6}}
+.plan .r-drag{{stroke:var(--m-drag);stroke-width:2.6}}
+.plan .border{{stroke:var(--ink3);stroke-width:.8;stroke-dasharray:5 4}}
+.plan .m-kinzua{{fill:var(--m-drag);stroke:var(--panel);stroke-width:1.4}}
+.plan .m-lock{{fill:var(--ink2);stroke:var(--panel);stroke-width:1.2}}
+.plan .m-putin{{fill:none;stroke:var(--m-float);stroke-width:2.2}}
+.plan .m-end{{fill:var(--ink);stroke:var(--panel);stroke-width:1.6}}
+.plan .m-town{{fill:var(--ink3)}}
+.plan text{{font-family:"IBM Plex Sans",sans-serif}}
+.plan .t-end{{font-size:12px;font-weight:600;fill:var(--ink)}}
+.plan .t-sub,.plan .t-rose{{font-size:9px;fill:var(--ink3);
+font-family:"IBM Plex Mono",monospace}}
+.plan .t-town{{font-size:9.5px;fill:var(--ink2)}}
+.plan .t-call{{font-size:10.5px;font-weight:600;fill:var(--m-drag)}}
+.plan .t-border{{font-size:8.5px;letter-spacing:.12em;fill:var(--ink3)}}
+.plan .rose line,.plan .scale line{{stroke:var(--ink3);stroke-width:1}}
+.plan .rose path{{fill:var(--ink3)}}
+.plan .leader{{stroke:var(--m-drag);stroke-width:1}}
+
+/* river-mile strip */
+.strip text{{font-family:"IBM Plex Sans",sans-serif}}
+.strip .band-bg{{fill:var(--band)}}
+.strip .s-float{{fill:var(--m-float)}} .strip .s-wade{{fill:var(--m-wade)}}
+.strip .s-drag{{fill:var(--m-drag)}}
+.strip .s-camp{{fill:var(--camp)}} .strip .s-tribal{{fill:var(--trb)}}
+.strip .s-cty-pa{{fill:var(--cty-pa)}} .strip .s-cty-ny{{fill:var(--cty-ny)}}
+.strip .t-lane{{font-size:9px;letter-spacing:.09em;fill:var(--ink3);
+font-weight:600}}
+.strip .t-cty{{font-size:9px;fill:var(--ink2)}}
+.strip .t-strip-town{{font-size:10px;fill:var(--ink2)}}
+.strip .tick-town{{stroke:var(--rule);stroke-width:1}}
+.strip .b-dam{{fill:var(--m-drag)}} .strip .b-lock{{fill:var(--ink3)}}
+.strip .t-call2{{font-size:9.5px;font-weight:600;fill:var(--ink2)}}
+.strip .gapbar{{stroke:var(--warn);stroke-width:2.2;stroke-linecap:round}}
+.strip .t-gap{{font-size:9.5px;fill:var(--warn);font-weight:600}}
+.strip .axis{{stroke:var(--ink3);stroke-width:.8}}
+.strip .t-axis{{font-size:9px;fill:var(--ink3);
+font-family:"IBM Plex Mono",monospace}}
+.strip .t-axis-lab{{font-size:9.5px;fill:var(--ink3)}}
 </style>
 </head>
 <body>
@@ -216,8 +364,26 @@ a{{color:var(--water)}}
 </div></header>
 
 <div class="wrap">
+  <figure class="figwrap">
+    <div class="heroGrid">
+      <div>{figs['plan']}</div>
+      {legend}
+    </div>
+    <figcaption>The corridor, north up. The centerline is the USGS NHDPlus
+    High Resolution mainstem, coloured by whether July median discharge will
+    carry a loaded boat. The first {f['start_rm'] - f['putin_rm']:.0f} miles
+    below the source will not: that stretch is walked in the channel, and the
+    first public land where the river is floatable is
+    {f['putin_name']} at RM {f['putin_rm']:.1f}.
+    <a href="map.html">Open the interactive version</a> for access points,
+    gages, campgrounds, the nightly stops and every layer toggled
+    separately.</figcaption>
+  </figure>
+
   <div class="dl">
-    <a class="btn primary" href="allegheny_river_atlas.gpkg" download>
+    <a class="btn primary" href="map.html"><b>Open the interactive map</b>
+      <span>Pan, zoom, toggle layers, click anything</span></a>
+    <a class="btn" href="allegheny_river_atlas.gpkg" download>
       <b>Download the GeoPackage</b><span>{size_mb:.1f} MB · EPSG:4326 ·
       opens in QGIS</span></a>
     <a class="btn" href="DATA_DICTIONARY.md"><b>Data dictionary</b>
@@ -225,6 +391,7 @@ a{{color:var(--water)}}
     <a class="btn" href="LICENSE.txt"><b>Licence &amp; attribution</b>
       <span>CC BY 4.0 compilation</span></a>
   </div>
+
 
   <h2>What this is</h2>
   <p>The Allegheny is well mapped as a <em>line</em> and poorly mapped as a
@@ -245,6 +412,28 @@ a{{color:var(--water)}}
     <li><b>Roughly 175 river miles — over half the route — carry a “Not
     Supporting” water-quality status</b> in EPA ATTAINS.</li>
   </ul>
+
+  <figure class="figwrap">
+    <h3 class="figh">The same {f['start_rm']:.0f} miles on one axis</h3>
+    <div class="key">
+      <span><i style="background:var(--m-float)"></i>Floatable</span>
+      <span><i style="background:var(--m-wade)"></i>Wadeable</span>
+      <span><i style="background:var(--m-drag)"></i>Below wading flow</span>
+      <span><i style="background:var(--camp)"></i>Legal public camping</span>
+      <span><i style="background:var(--trb)"></i>Seneca Nation — ask the
+        Nation</span>
+      <span><i style="background:var(--band)"></i>No lawful public
+        campsite</span>
+    </div>
+    <div class="scrollx">{figs['strip']}</div>
+    <figcaption>This is how a river is actually read. Every layer in the
+    dataset keys to this axis, so any two of them join on position without a
+    spatial operation. The middle band is the finding the rest of the
+    project turned on: the green is everywhere along {f['start_rm']:.0f} miles
+    of river where the public may lawfully camp, reached from the water.
+    Scroll it sideways on a phone; on a desktop, hovering any band gives the
+    reach and the rule behind it.</figcaption>
+  </figure>
 
   <h2>The river-mile convention</h2>
   <p>Everything is keyed to <b>river mile 0.0 at the mouth, increasing
