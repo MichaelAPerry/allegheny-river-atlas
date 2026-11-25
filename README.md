@@ -11,7 +11,7 @@ The Allegheny River Atlas is an open GIS dataset covering the river from its hea
 
 ## Get the data
 
-[Download the GeoPackage](docs/allegheny_river_atlas.gpkg) and open it in QGIS, ArcGIS Pro, or another GIS that reads GeoPackage. The file has 22 spatial layers and one metadata table in a single package. Spatial layers use WGS 84 (EPSG:4326). The [data dictionary](docs/DATA_DICTIONARY.md) lists the layers, fields, and sources.
+[Download the GeoPackage](https://michaelaperry.github.io/allegheny-river-atlas/allegheny_river_atlas.gpkg) and open it in QGIS, ArcGIS Pro, or another GIS that reads GeoPackage. The September 18, 2026 compilation has 22 spatial layers and one metadata table in a single package. Spatial layers use WGS 84 (EPSG:4326). The [data dictionary](docs/DATA_DICTIONARY.md) lists the layers, fields, and sources.
 
 River miles increase upstream from mile 0 at the mouth in Pittsburgh. The trip maps begin near Coudersport at mile 312.2. The GIS centerline extends farther upstream and measures 322.579 miles. It follows 652 USGS NHDPlus High Resolution flowlines. The atlas records a mean absolute difference of 0.049 mile against mapped NHD lock chambers. The five published lock comparisons round to a mean of 0.050 mile. At Kinzua Dam, the atlas mile is 200.05 and the published navigation mile is 197.9.
 
