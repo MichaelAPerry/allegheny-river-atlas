@@ -1,30 +1,5 @@
 #!/usr/bin/env python3
-"""
-Step 25 - the landing page, rebuilt for the person in the boat.
-
-The atlas page answered "what is in this dataset". That is the wrong first
-question for almost everyone who arrives: they want to know where to put in,
-whether the water is high enough today, where they may legally sleep, and who
-to ring when a launch is gone. This page answers those, on a phone, over a
-real basemap - and keeps the dataset, the dictionary and the licence, demoted
-to the footer where the people who want them will still find them.
-
-Two things here do not exist on the old page:
-
-  * a real basemap. The atlas map is deliberately tile-free so it renders
-    inside a sandboxed artifact viewer that blocks third-party images. That
-    constraint does not apply on a static host, and without roads, bridges
-    and terrain underneath, a river line is close to unreadable to anyone who
-    does not already know the river.
-  * live discharge. A flow number baked into a static page is stale the day
-    after it is built, and a stale flow is worse than none. USGS Water
-    Services sends `Access-Control-Allow-Origin: *`, so the page fetches the
-    current reading itself and compares it against this river's own daily
-    medians, which are baked in because they do not change.
-
-Outputs
-  docs/index.html
-"""
+"""Build the online paddling map and streamflow page."""
 from __future__ import annotations
 
 import datetime as dt
@@ -164,14 +139,14 @@ TEMPLATE = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Paddling the Allegheny — launches, camping and live flow by river mile</title>
-<meta name="description" content="Where to put in, where you may legally camp, what the water is doing right now, and who to call — the Allegheny River from Coudersport to Pittsburgh, by river mile.">
+<title>Paddling the Allegheny — river access, camping and flow</title>
+<meta name="description" content="Explore river access, camping classifications and USGS gages from Coudersport to Pittsburgh.">
 <meta name="color-scheme" content="light dark">
 <link rel="canonical" href="__SITE__">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Paddling the Allegheny">
 <meta property="og:title" content="Paddling the Allegheny">
-<meta property="og:description" content="Launches, legal camping, live flow and who to ring — 312 miles from Coudersport to the Point at Pittsburgh, keyed to river mile.">
+<meta property="og:description" content="Explore river access and camping from Coudersport to Pittsburgh.">
 <meta property="og:url" content="__SITE__">
 <meta property="og:image" content="__SITE__og.png">
 <meta property="og:image:width" content="1200">
@@ -179,7 +154,7 @@ TEMPLATE = r"""<!doctype html>
 <meta property="og:image:alt" content="The Allegheny River from Coudersport to Pittsburgh, drawn as a single line.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Paddling the Allegheny">
-<meta name="twitter:description" content="Launches, legal camping, live flow and who to ring — by river mile.">
+<meta name="twitter:description" content="Explore river access and camping from Coudersport to Pittsburgh.">
 <meta name="twitter:image" content="__SITE__og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=&apos;http://www.w3.org/2000/svg&apos; viewBox=&apos;0 0 32 32&apos;%3E%3Crect width=&apos;32&apos; height=&apos;32&apos; rx=&apos;7&apos; fill=&apos;%232d6b7c&apos;/%3E%3Cpath d=&apos;M7 9c4 0 4 4 8 4s4-4 8-4M7 16c4 0 4 4 8 4s4-4 8-4M7 23c4 0 4 4 8 4s4-4 8-4&apos; stroke=&apos;%23fff&apos; stroke-width=&apos;2.4&apos; fill=&apos;none&apos; stroke-linecap=&apos;round&apos;/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -404,9 +379,9 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.9em;
 <body>
 <header><div class="wrap">
   <h1>Paddling the Allegheny</h1>
-  <p>Where to put in, where you may lawfully camp, what the water is doing
-  right now, and who to ring — from the source at Coudersport to the Point at
-  Pittsburgh, keyed to river mile.</p>
+  <p>Plan a trip from Coudersport to the Point in Pittsburgh. Search the map by
+  place or river mile, and select a marker or reach for details.</p>
+  <p><a href="map.html">Open the offline river map</a> · <a href="#atlas-data">Get the GIS data</a></p>
 </div></header>
 
 <div class="maprow"><div class="mapbox">
@@ -421,115 +396,79 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.9em;
     </div>
     <div class="chips" id="chips"></div>
   </div>
-  <div class="maphint">Tap anything for the detail. A green bank is one you
-  may lawfully camp on &mdash; everything else is private or barred.</div>
+  <div class="maphint">Green river spans show mapped public frontage classified for dispersed camping. Check current rules and access with the land manager.</div>
 </div></div>
 
 <main class="wrap">
 
 <section id="flow">
-  <h2>What the water is doing</h2>
-  <p class="lede">Live from the USGS gages on this river, fetched when you
-  opened the page, next to what this river normally runs on today's date.
-  Those medians come from decades of record and are baked in; the current
-  reading is not.</p>
+  <h2>USGS streamflow</h2>
+  <p class="lede">Compare the latest available USGS readings with the historical daily medians saved in the atlas. The basemap and current readings require an internet connection.</p>
   <div class="flow" id="flowcards"></div>
   <p class="flownote" id="flownote">Fetching current readings…</p>
 </section>
 
 <section id="strip">
-  <h2>The whole river on one line</h2>
-  <p class="lede">Every mile of it, from the source on the left to Pittsburgh
-  on the right.</p>
+  <h2>River-mile chart</h2>
+  <p class="lede">The chart runs downstream from Coudersport to Pittsburgh.</p>
   <figure class="figwrap">
     <div class="key">
-      <span><i style="background:var(--m-float)"></i>Floatable in July</span>
-      <span><i style="background:var(--m-wade)"></i>Wadeable</span>
-      <span><i style="background:var(--m-drag)"></i>Too low to float</span>
-      <span><i style="background:var(--camp)"></i>Legal public camping</span>
+      <span><i style="background:var(--m-float)"></i>Estimated float at July median flow</span>
+      <span><i style="background:var(--m-wade)"></i>Estimated wade at July median flow</span>
+      <span><i style="background:var(--m-drag)"></i>Below modeled wading flow</span>
+      <span><i style="background:var(--camp)"></i>Public dispersed camping classified as permitted</span>
       <span><i style="background:var(--trb)"></i>Seneca Nation — ask the
         Nation</span>
-      <span><i style="background:var(--band)"></i>No lawful public
-        campsite</span>
+      <span><i style="background:var(--band)"></i>No mapped public dispersed camping</span>
       <span><i style="background:var(--trail)"></i>Designated water trail</span>
       <span><i style="background:var(--trail-soft)"></i>Promoted reach</span>
     </div>
     <div class="scrollx">__STRIP__</div>
-    <figcaption>Scroll it sideways on a phone; hover any band on a desktop.
-    The camping band is the one that surprises people: about an eighth of this
-    river has legal public dispersed camping reachable from the water, and
-    three stretches over 25 miles have none at all.</figcaption>
+    <figcaption>Scroll sideways on a phone or hover over a band for details. About 12% of the route has mapped public frontage classified for dispersed camping.</figcaption>
   </figure>
 </section>
 
 <section id="stewards">
-  <h2>Who to ring</h2>
-  <p class="lede">A water trail grants nobody a right of access. What it gives
-  you is a named body that signs the reach, keeps the launches open and will
-  pick up the phone about a closed one. Pennsylvania's published mapping
-  carries one of these four. <b>__NOSTEWARD__ river miles have no steward at
-  all.</b></p>
+  <h2>Water-trail contacts</h2>
+  <p class="lede">Contact the organization listed for your reach about launches and local conditions. About __NOSTEWARD__ river miles fall outside the four reaches mapped here.</p>
   <div class="cards">
 __STEWARDS__
   </div>
 </section>
 
 <section id="know">
-  <h2>Three things to know before you go</h2>
+  <h2>Conditions and access</h2>
   <div class="cards">
     <div class="card">
-      <h3>The top of the river is a walk, not a paddle</h3>
-      <p>At July median flow, __DRAGMI__ of the first __TOPUTIN__ miles below
-      Coudersport are below floating depth — you are walking them, in the
-      channel. The first public land where the river floats is State Game
-      Land 301 at RM __PUTIN__. From there it is __FLOATMI__ miles of
-      paddling.</p>
+      <h3>Shallow water near Coudersport</h3>
+      <p>The July median-flow model puts about __DRAGMI__ miles below the floating threshold downstream from Coudersport. Check actual conditions before setting out.</p>
     </div>
     <div class="card">
       <h3>Kinzua Dam is a mandatory portage</h3>
-      <p>No lockage, no passage, RM 200 — carry around it. The eight Locks
-      &amp; Dams between RM 62 and the Point <em>do</em> lock recreational
-      craft through, free: signal the lockmaster and wait your turn behind
-      commercial traffic.</p>
+      <p>Kinzua Dam has no navigation lock. Confirm portage access before setting out. Below river mile 62, check recreational passage and operating hours with the U.S. Army Corps of Engineers.</p>
     </div>
     <div class="card">
-      <h3>34 miles run through the Seneca Nation</h3>
-      <p>Between Salamanca and the state line the Allegany Territory is
-      sovereign ground. The Nation, not a state agency, is the authority on
-      access, camping and fishing there. Ask the Nation.</p>
+      <h3>Seneca Nation’s Allegany Territory</h3>
+      <p>About 34.8 river miles cross the Nation’s territory. Check with the Nation about access, camping and fishing there.</p>
     </div>
   </div>
 </section>
 
 <section id="gaps">
-  <h2>Know a launch that is not on here?</h2>
-  <p class="lede">This carries __NLAUNCH__ public launches and __NCAMP__
-  campgrounds within a mile of the water, every one of them taken from state
-  or federal mapping. <b>That mapping is incomplete and the people who
-  steward these reaches know it.</b> Township ramps, club accesses and
-  informal gravel bars turn over constantly and reach the state layers years
-  late, if ever.</p>
-  <p class="lede">If you know one that is missing, or one on here that is
-  gone, send it. A town and a road name is enough — it gets snapped to the
-  centerline and carries a river mile like everything else. Same for anything
-  on this page you can see is wrong.</p>
+  <h2>Report a missing launch or a correction</h2>
+  <p class="lede">Launch and campground coverage varies by area. A town and road name or coordinates will help me locate a correction.</p>
   <p><a class="cta" href="__REPO__/issues/new?title=Launch%20or%20correction&amp;body=Where%20is%20it%20(town%2C%20road%2C%20or%20coordinates)%3A%0A%0AWhat%20kind%20of%20access%20is%20it%3A%0A%0AWho%20owns%20or%20maintains%20it%3A%0A%0AAnything%20else%3A%0A"
     rel="noopener">Send a launch or a correction &rarr;</a></p>
 </section>
 
 </main>
 
-<div class="data"><div class="wrap">
-  <h2>The data underneath</h2>
-  <p class="fine">Everything above is drawn from one open dataset: 23 layers,
-  EPSG:4326, keyed to river mile 0.0 at the mouth increasing upstream — the
-  USACE Allegheny navigation convention. The centerline is the USGS NHDPlus
-  High Resolution mainstem, 652 flowlines on one level path, measured
-  geodesically; it validates against NHD's own mapped lock chambers to a mean
-  absolute deviation of 0.049 mile.</p>
+<div class="data" id="atlas-data"><div class="wrap">
+  <h2>Download the atlas data</h2>
+  <p class="fine">The GeoPackage contains 22 spatial layers and a metadata table. River miles increase upstream from mile 0 at the mouth in Pittsburgh. The data dictionary describes the USGS centerline, mileage checks and sources.</p>
   <div class="dl">
-    <a class="btn" href="map.html"><b>Full atlas map</b>
-      <span>Every layer, toggled separately</span></a>
+    <a class="btn" href="map.html"><b>Offline river map</b>
+      <span>Save the HTML file and open it in a browser</span></a>
     <a class="btn" href="allegheny_river_atlas.gpkg" download>
       <b>GeoPackage</b><span>__SIZE__ MB · opens in QGIS</span></a>
     <a class="btn" href="DATA_DICTIONARY.md"><b>Data dictionary</b>
@@ -537,11 +476,7 @@ __STEWARDS__
     <a class="btn" href="LICENSE.txt"><b>Licence</b>
       <span>CC BY 4.0 compilation</span></a>
   </div>
-  <p class="fine">Camping classifications are an interpretation of published
-  rules, not an agency determination. Flow bands are median estimates, not
-  forecasts. Owner names and mailing addresses from county assessment records
-  are not republished; parcel identifiers are, so anyone can make their own
-  enquiry through the county office.</p>
+  <p class="fine">Camping classifications reflect published rules at compilation. <strong>This is not legal advice. Check current regulations and permits with the land manager before camping.</strong> River travel bands are estimates based on historical medians.</p>
   <p class="fine">Built __TODAY__. Sources: USGS (NHDPlus HR, NWIS, 3DEP,
   The National Map) · US EPA ATTAINS · USDA Forest Service · PA Fish &amp;
   Boat Commission, PA DCNR and PA Game Commission via PASDA · NYSDEC ·
@@ -562,6 +497,12 @@ const CV=n=>getComputedStyle(document.documentElement)
   .getPropertyValue(n).trim();
 
 /* ---------- map ---------- */
+if (typeof L === "undefined") {
+  document.getElementById("map").textContent = "The online map could not load. Use the offline river map linked above.";
+  document.querySelector(".mapui").hidden = true;
+  document.getElementById("flownote").textContent = "Current readings are unavailable.";
+}
+if (typeof L !== "undefined") {
 const map=L.map("map",{zoomControl:false,scrollWheelZoom:false,
   tap:true,minZoom:6,maxZoom:17}).setView([41.3,-79.3],8);
 L.control.zoom({position:"topright"}).addTo(map);
@@ -569,15 +510,15 @@ map.on("click",()=>map.scrollWheelZoom.enable());
 map.on("mouseout",()=>map.scrollWheelZoom.disable());
 
 const TILES={
-  light:"https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-  dark:"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"};
+  light:"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  dark:"https://tile.openstreetmap.org/{z}/{x}/{y}.png"};
 const ATTR='&copy; <a href="https://www.openstreetmap.org/copyright">'+
-  'OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  'OpenStreetMap</a> contributors';
 let base=null;
 function setBase(){
   if(base) map.removeLayer(base);
   base=L.tileLayer(dark.matches?TILES.dark:TILES.light,
-    {attribution:ATTR,subdomains:"abcd",maxZoom:19,detectRetina:true})
+    {attribution:ATTR,maxZoom:19})
     .addTo(map);
   base.bringToBack();
 }
@@ -601,9 +542,9 @@ const dirTo=(lat,lon)=>
 
 /* ---------- geometry ---------- */
 const MODE={float:"--m-float",wade:"--m-wade",drag:"--m-drag"};
-const MODE_TXT={float:"Floatable at July median flow",
-  wade:"Wadeable — too thin to float a loaded boat",
-  drag:"Below wading flow — this is a carry"};
+const MODE_TXT={float:"Estimated float at July median flow",
+  wade:"Estimated wade at July median flow",
+  drag:"Below modeled wading flow at July median flow"};
 let paths=[];
 function riverLines(){
   D.river.forEach(sg=>{
@@ -623,8 +564,7 @@ function campLines(){
     const p=L.polyline(t.pts,{pane:"casing",color:CV("--trb"),weight:9,
       opacity:.5,lineCap:"round"});
     p.bindPopup(`<b>${esc(t.name)}</b><br>${rmTxt(t.hi)}–${rmTxt(t.lo)}`+
-      `<br><br>Sovereign ground. The Nation, not a state agency, is the `+
-      `authority on access, camping and fishing here.`);
+      `<br><br>Check with the Seneca Nation about access, camping and fishing here.`);
     paths.push([p,"--trb"]); p.addTo(G.camping);});
 }
 function trailLines(){
@@ -696,12 +636,12 @@ riverLines(); campLines(); trailLines(); addPoints();
 /* ---------- layer chips ---------- */
 const CHIPS=[
   ["river","River",      "--m-float", true,  true],
-  ["camping","Legal camping","--camp", true, true],
+  ["camping","Dispersed camping","--camp", true, true],
   ["launch","Launches",  "--launch",  true,  false],
   ["camp","Campgrounds", "--camp",    true,  false],
   ["hazard","Dams & locks","--hazard",true,  false],
-  ["trails","Trail steward","--trail",true,  true],
-  ["gage","Gages",       "--gage",    false, false],
+  ["trails","Water trails","--trail",true,  true],
+  ["gage","USGS gages",       "--gage",    false, false],
   ["town","Towns",       "--ink3",    true,  false],
 ];
 const chips=document.getElementById("chips");
@@ -759,8 +699,9 @@ function goto(o){
 function gotoRM(rm){
   rm=Math.max(0,Math.min(rm,M.top_rm));
   /* interpolate along the reach that contains this mile */
-  const sg=D.river.find(s=>rm<=s.hi&&rm>=s.lo)||D.river[0];
-  const f=(sg.hi-rm)/Math.max(sg.hi-sg.lo,1e-6);
+  const sg=D.river.find(s=>rm<=s.hi&&rm>=s.lo) ||
+    (rm>D.river[0].hi ? D.river[0] : D.river[D.river.length-1]);
+  const f=Math.max(0,Math.min(1,(sg.hi-rm)/(sg.hi-sg.lo)));
   const p=sg.pts[Math.min(Math.round(f*(sg.pts.length-1)),sg.pts.length-1)];
   res.style.display="none"; q.blur();
   map.setView(p,13,{animate:true});
@@ -796,7 +737,13 @@ q.addEventListener("input",()=>{
 q.addEventListener("keydown",e=>{
   if(e.key==="Escape"){q.value=""; hits=[]; res.style.display="none";
     qclear.hidden=true; return;}
-  if(!hits.length) return;
+  if(!hits.length){
+    const mile=res.querySelector("[data-rm]");
+    if(e.key==="Enter" && res.style.display==="block" && mile){
+      gotoRM(Number(mile.dataset.rm)); e.preventDefault();
+    }
+    return;
+  }
   if(e.key==="ArrowDown"){cur=(cur+1)%hits.length; render(); e.preventDefault();}
   else if(e.key==="ArrowUp"){cur=(cur-1+hits.length)%hits.length; render();
     e.preventDefault();}
@@ -813,10 +760,10 @@ const cards=document.getElementById("flowcards"),
       note=document.getElementById("flownote");
 function band(cfs,g){
   if(cfs==null) return ["p-na","no current reading"];
-  if(cfs<M.wade_cfs) return ["p-hi","too low to float"];
-  if(cfs<M.float_cfs) return ["p-lo","wadeable, not floatable"];
+  if(cfs<M.wade_cfs) return ["p-hi","below modeled wading threshold"];
+  if(cfs<M.float_cfs) return ["p-lo","below modeled floating threshold"];
   if(g.p75!=null&&cfs>g.p75*2.5) return ["p-hi","running high"];
-  return ["p-ok","floatable"];
+  return ["p-ok","above modeled floating threshold"];
 }
 function drawFlow(){
   cards.innerHTML=D.gages.map(g=>{
@@ -861,8 +808,7 @@ fetch("https://waterservices.usgs.gov/nwis/iv/?format=json&sites="+sites+
       : "USGS returned no current readings just now.";
   })
   .catch(()=>{note.textContent=
-    "Could not reach USGS for current readings — the medians above are "+
-    "still this river's own, from decades of record.";});
+    "Current readings are unavailable. Historical medians are shown where available.";});
 </script>
 </body>
 </html>
@@ -895,14 +841,8 @@ def main() -> None:
             .replace("__STRIP__", figs["strip"])
             .replace("__STEWARDS__", steward_cards)
             .replace("__SIZE__", f"{size_mb:.1f}")
-            .replace("__FLOATMI__", f"{f['float_mi']:.0f}")
             .replace("__DRAGMI__", f"{f['drag_mi'] + f['wade_mi']:.0f}")
-            .replace("__PUTIN__", f"{f['putin_rm']:.1f}")
-            .replace("__TOPUTIN__",
-                     f"{f['start_rm'] - f['putin_rm']:.0f}")
             .replace("__NOSTEWARD__", f"{f['trail_unstewarded_mi']:.0f}")
-            .replace("__NLAUNCH__", str(len(payload["launches"])))
-            .replace("__NCAMP__", str(len(payload["camps"])))
             .replace("__TODAY__", TODAY)
             .replace("__SITE__", SITE)
             .replace("__REPO__", REPO))

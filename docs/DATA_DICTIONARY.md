@@ -2,15 +2,17 @@
 
 `allegheny_river_atlas.gpkg` — OGC GeoPackage, **EPSG:4326 (WGS 84)**, 22 spatial layers plus a metadata table. Compiled 2026-09-18.
 
-Opens directly in QGIS (drag the file in), ArcGIS Pro, R (`sf`), Python (`geopandas`) and GDAL/OGR. One file, no dependencies, no projection guessing.
+Open the GeoPackage in QGIS, ArcGIS Pro, or another GIS that supports the format.
 
-## The convention everything is keyed to
+## River miles
 
-**River mile 0.0 is the mouth at Point State Park, Pittsburgh, increasing upstream** — the USACE Allegheny navigation convention. Coudersport is RM 312.2. Every layer in this package carries a `river_mile`, or a `river_mile_upstream` / `river_mile_downstream` pair, so any two layers can be joined on position along the river without a spatial operation.
+River mile 0 is the mouth at Point State Park, Pittsburgh. Miles increase upstream. The trip maps begin near Coudersport at mile 312.2. The GeoPackage centerline covers 322.579 miles. Most river features carry a point mile or the endpoints of a span. The layer schema also uses fields such as `end_river_mile` for itinerary stops. Use the relevant mile fields to compare locations and overlapping reaches.
 
-The centerline is the USGS NHDPlus High Resolution mainstem: 652 flowlines on a single level path with an unbroken FromNode/ToNode chain. Mileage is geodesic on the WGS 84 ellipsoid. The index validates against NHD's own mapped lock chambers to a **mean absolute deviation of 0.049 mile** through the locked reach. Above RM 62 the high-resolution trace resolves roughly 1% more sinuosity than historic chart mileage, so computed and published river miles diverge by about two miles at Kinzua Dam; the `barriers` layer carries both.
+The centerline follows 652 USGS NHDPlus High Resolution flowlines on one connected path. Distance is measured geodesically on WGS 84. The atlas records a mean absolute difference of 0.049 mile against mapped NHD lock chambers. The five rounded comparisons in `barriers.nhd_crosscheck_delta_mi` average 0.050 mile. At Kinzua Dam, `barriers` records a computed mile of 200.05 and a published navigation mile of 197.9.
 
 ## Layers
+
+`dataset_metadata` is a nonspatial table with one record for each of the 22 spatial layers.
 
 | Layer | Features | Geometry | Source |
 |---|---:|---|---|
@@ -37,15 +39,15 @@ The centerline is the USGS NHDPlus High Resolution mainstem: 652 flowlines on a 
 | `riparian_parcels` | 52 | Point | County assessment offices |
 | `river_mile_markers` | 65 | Point | derived |
 
-### What the derived line layers are
+### River reach layers
 
-Seven layers exist only because this project made them. They were river-mile span *tables* with no geometry — the analytical output of the pipeline — and they have been cut from the centerline into real LineStrings so they can be mapped and intersected:
+The reach layers represent spans along the centerline. A frontage line identifies a stretch of river next to a tract. Use the land polygons to inspect the tract boundaries.
 
-* **`river_camping_legality`** — every public tract's river frontage, classified against that jurisdiction's actual camping rules. This is the layer nobody else has.
-* **`river_public_land_frontage`** — measured along-channel frontage per tract, not centroid proximity. National Forest frontage is filtered to federal ownership, excluding the inholdings that make up over half the proclamation boundary on this river.
-* **`river_traverse_mode`** — estimated median discharge applied to NHD drainage area, classified into drag / wade / float.
-* **`river_water_quality`** — EPA ATTAINS impairment, merged to non-overlapping blocks and clipped to the mainstem.
-* **`river_fishing_regulations`**, **`river_fish_advisories`**, **`river_drone_restrictions`**, **`river_counties`** — regulatory extents expressed as river geometry.
+- `river_camping_legality` gives the camping classification and a rule summary for each mapped span. Overlapping spans can represent different tracts along the same reach. Combining overlapping spans where `camping_legal = 1` gives 37.41 miles, about 12% of the Coudersport-to-Pittsburgh route.
+- `river_public_land_frontage` measures frontage along the channel. National Forest frontage uses federal ownership polygons. Designated wilderness is listed separately.
+- `river_traverse_mode` classifies stretches by estimated July median flow.
+- `river_water_quality` shows EPA ATTAINS assessment spans clipped to the mainstem. The 24 published spans total 175.39 miles and all carry “Not Supporting.”
+- `river_fishing_regulations`, `river_fish_advisories`, `river_drone_restrictions` and `river_counties` locate rules, advisories and boundaries along the river.
 
 ## Field conventions
 
@@ -55,15 +57,14 @@ Seven layers exist only because this project made them. They were river-mile spa
 | `river_mile_upstream` | Upstream end of the span, river miles from the mouth |
 | `river_mile_downstream` | Downstream end of the span, river miles from the mouth |
 | `length_mi` | Along-channel length of the span, statute miles |
-| `offset_from_centerline_m` | Perpendicular distance from the NHD centerline, metres |
+| `offset_from_centerline_m` | Distance from the NHD centerline in meters |
 | `median_discharge_cfs` | Estimated median discharge, cubic feet per second |
 | `drainage_area_sqmi` | Upstream drainage area, square miles |
-| `traverse_mode` | drag (<70 cfs), wade (70-120), float (>=120) - the in-channel travel mode implied by estimated flow |
+| `traverse_mode` | Model category based on estimated flow: drag below 70 cfs, wade from 70 to below 120 cfs, float at 120 cfs or more |
 | `camping_class` | Camping rule class for the managing jurisdiction |
-| `camping_legal` | True where dispersed camping is permitted |
-| `epa_ir_category` | EPA Integrated Report category; 5 = impaired and needing a TMDL, 4C = impaired by a non-pollutant |
+| `camping_legal` | Atlas flag for a span classified as allowing dispersed camping |
 
-Every layer also carries `source_agency`, `source_dataset`, `source_licence` and `retrieved`, and the same information is in the `dataset_metadata` table.
+Each spatial layer carries `source_agency`, `source_dataset`, `source_licence` and `retrieved`, and the same information is in the `dataset_metadata` table.
 
 ## Provenance and terms
 
@@ -77,7 +78,7 @@ Every layer also carries `source_agency`, `source_dataset`, `source_licence` and
 | `campgrounds` | Recreation sites, TNM Structures, OSM camp_site | Mixed; OSM portion is ODbL |
 | `nightly_stops` | Output of the pacing model | Derived |
 | `towns` | The National Map, geonames incorporated places | US Government work, public domain |
-| `water_trails` | Water Trails via PASDA; steward contacts verified against each organisation's own page | PASDA terms; attribution required |
+| `water_trails` | Water Trails via PASDA; trail stewards’ published material | PASDA terms; attribution required |
 | `kinzua_portage_route` | OSM highway network, USGS elevation | OSM: ODbL, attribution required |
 | `river_traverse_mode` | USGS daily-median discharge applied to NHD drainage area | Derived |
 | `river_camping_legality` | Agency land layers classified against published camping rules | Derived |
@@ -89,21 +90,19 @@ Every layer also carries `source_agency`, `source_dataset`, `source_licence` and
 | `river_counties` | The National Map, govunits | US Government work, public domain |
 | `water_trail_gaps` | Reaches no water trail covers | CC BY 4.0 |
 | `hospitals` | The National Map, structures | US Government work, public domain |
-| `riparian_parcels` | Potter, Forest, Butler, Warren, Venango, Allegheny, Westmoreland, NYSDEC tax parcels | Public records; owner names are assessment data |
+| `riparian_parcels` | Potter, Forest, Butler, Warren, Venango, Allegheny, Westmoreland, NYSDEC tax parcels | Public assessment records. The atlas publishes parcel identifiers. |
 | `river_mile_markers` | Computed from the NHD centerline | Derived; same terms as source |
 
-**Attribution that must travel with this data:** USGS (NHDPlus HR, NWIS, The National Map, 3DEP), US EPA (ATTAINS), USDA Forest Service (EDW), Pennsylvania Fish & Boat Commission, PA DCNR and PA Game Commission via **PASDA**, NYSDEC, and **OpenStreetMap contributors (ODbL)** for the campground and portage-route layers.
+**Source attribution**
 
-## Known limitations — read before using
+ USGS (NHDPlus HR, NWIS, The National Map, 3DEP), US EPA (ATTAINS), USDA Forest Service (EDW), Pennsylvania Fish & Boat Commission, PA DCNR and PA Game Commission via **PASDA**, NYSDEC, and **OpenStreetMap contributors (ODbL)** for the campground and portage-route layers.
 
-1. **Camping classifications are an interpretation**, not an agency determination. They encode published rules per jurisdiction as of compilation. Verify before relying on them.
-2. **`riparian_parcels` positions are approximate.** Parcel records are real and carry their county parcel identifier, but each is placed at its river mile on the centerline rather than at its true parcel centroid. Owner names are public assessment records and only Potter and Forest counties publish them; McKean, Armstrong and Clarion publish no reachable parcel service at all.
-3. **New York coverage is thin and that is a real finding**, not an omission: no NY public land fronts the centerline anywhere in the corridor, and NYSDEC publishes no designated-launch layer for the Cattaraugus reach.
-4. **34.8 miles run through the Seneca Nation's Allegany Territory**, where the Nation, not a state agency, is the authority. The boundary is included; the rules that apply inside it are not state rules.
-5. **Flow-derived layers are median estimates**, interpolated from unit runoff between gages. They are not measurements and not a forecast.
-6. **Campground coverage is uneven** — agency layers cover the National Forest well and the private sector barely; the OSM portion is volunteer-maintained.
+See the [license](LICENSE.txt) for compilation and source terms.
 
-## Reproducing it
+## Coverage and limits
 
-Everything here is rebuilt from public services by `python3 scripts/run_all.py`, about ten minutes end to end. No layer is hand-digitised and no figure is hand-entered.
-
+- Camping classifications reflect the published rules available at compilation. **This is not legal advice. Check current regulations and permit requirements with the managing agency or nation before camping.**
+- Parcel points are placed on the centerline at the associated river mile. Use the parcel identifier and county assessment records to locate the tract. County coverage varies.
+- The atlas shows the Seneca Nation’s Allegany Territory along about 34.8 river miles. Check with the Nation about access, camping and fishing within its territory.
+- Launch and campground inventories are incomplete, including in New York. Campground distances are offsets from the centerline. Confirm access and availability before traveling.
+- The flow bands use estimated medians interpolated between gages. Check current conditions separately.

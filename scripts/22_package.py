@@ -1,31 +1,5 @@
 #!/usr/bin/env python3
-"""
-Step 20 - package the analysis as something a GIS actually opens.
-
-The working directory `data/processed/` is fifty-odd loose CSV and GeoJSON
-files carrying raw source column names, no declared CRS on the tabular files,
-no provenance and no entry point. It is fine as pipeline scratch and useless
-as a deliverable - which matters, because the most genuinely valuable thing
-this project produced is the data, and nobody can use it in that state.
-
-This step fixes three specific failures:
-
-  1. **A dozen of the most useful tables have no geometry at all.** Camping
-     legality, public-land frontage, water quality, traverse mode, fishing
-     regulations, drone restrictions and the consumption advisories are all
-     river-mile *spans*. They are converted here into real LineString
-     segments cut from the centerline, which is what makes them mappable.
-  2. **Field names are whatever the source called them** - `dec_lat_va`,
-     `drain_area_va`, `SF_Name`, `camp_class`. They are renamed to a
-     documented schema.
-  3. **There is no provenance.** Every layer now carries its source agency,
-     dataset and retrieval date, and a `dataset_metadata` table repeats it
-     in machine-readable form.
-
-Outputs
-  output/allegheny_river_atlas.gpkg   one GeoPackage, all layers, EPSG:4326
-  output/DATA_DICTIONARY.md           layer and field documentation
-"""
+"""Package processed river data as a GeoPackage and write its data dictionary."""
 from __future__ import annotations
 
 import datetime as dt
@@ -103,7 +77,7 @@ PROVENANCE = {
     "riparian_parcels": ("County assessment offices",
                          "Potter, Forest, Butler, Warren, Venango, "
                          "Allegheny, Westmoreland, NYSDEC tax parcels",
-                         "Public records; owner names are assessment data"),
+                         "Public county assessment records"),
 }
 
 # raw source field -> documented name
@@ -333,28 +307,11 @@ def write_dictionary(written, layers) -> None:
       f"(WGS 84)**, {len(written)} spatial layers plus a metadata table. "
       f"Compiled {TODAY}.")
     A("")
-    A("Opens directly in QGIS (drag the file in), ArcGIS Pro, R (`sf`), "
-      "Python (`geopandas`) and GDAL/OGR. One file, no dependencies, no "
-      "projection guessing.")
-    A("")
-    A("## The convention everything is keyed to")
-    A("")
-    A("**River mile 0.0 is the mouth at Point State Park, Pittsburgh, "
-      "increasing upstream** — the USACE Allegheny navigation convention. "
-      "Coudersport is RM 312.2. Every layer in this package carries a "
-      "`river_mile`, or a `river_mile_upstream` / `river_mile_downstream` "
-      "pair, so any two layers can be joined on position along the river "
-      "without a spatial operation.")
-    A("")
-    A("The centerline is the USGS NHDPlus High Resolution mainstem: 652 "
-      "flowlines on a single level path with an unbroken FromNode/ToNode "
-      "chain. Mileage is geodesic on the WGS 84 ellipsoid. The index "
-      "validates against NHD's own mapped lock chambers to a **mean "
-      "absolute deviation of 0.049 mile** through the locked reach. Above "
-      "RM 62 the high-resolution trace resolves roughly 1% more sinuosity "
-      "than historic chart mileage, so computed and published river miles "
-      "diverge by about two miles at Kinzua Dam; the `barriers` layer "
-      "carries both.")
+    A("""Open the GeoPackage in QGIS, ArcGIS Pro, or another GIS that supports the format.
+
+## River miles
+
+River mile 0 is the mouth at Point State Park, Pittsburgh. Miles increase upstream. Use the relevant mile fields to compare locations and overlapping reaches.""")
     A("")
     A("## Layers")
     A("")
@@ -364,27 +321,9 @@ def write_dictionary(written, layers) -> None:
         src = PROVENANCE.get(n, ("unknown",))[0]
         A(f"| `{n}` | {c} | {t} | {src} |")
     A("")
-    A("### What the derived line layers are")
-    A("")
-    A("Seven layers exist only because this project made them. They were "
-      "river-mile span *tables* with no geometry — the analytical output of "
-      "the pipeline — and they have been cut from the centerline into real "
-      "LineStrings so they can be mapped and intersected:")
-    A("")
-    A("* **`river_camping_legality`** — every public tract's river frontage, "
-      "classified against that jurisdiction's actual camping rules. This is "
-      "the layer nobody else has.")
-    A("* **`river_public_land_frontage`** — measured along-channel frontage "
-      "per tract, not centroid proximity. National Forest frontage is "
-      "filtered to federal ownership, excluding the inholdings that make up "
-      "over half the proclamation boundary on this river.")
-    A("* **`river_traverse_mode`** — estimated median discharge applied to "
-      "NHD drainage area, classified into drag / wade / float.")
-    A("* **`river_water_quality`** — EPA ATTAINS impairment, merged to "
-      "non-overlapping blocks and clipped to the mainstem.")
-    A("* **`river_fishing_regulations`**, **`river_fish_advisories`**, "
-      "**`river_drone_restrictions`**, **`river_counties`** — regulatory "
-      "extents expressed as river geometry.")
+    A("""### River reach layers
+
+The reach layers represent spans along the centerline. A frontage line identifies a stretch of river next to a tract. Use the land polygons to inspect the tract boundaries.""")
     A("")
     A("## Field conventions")
     A("")
@@ -411,39 +350,13 @@ def write_dictionary(written, layers) -> None:
       "Commission via **PASDA**, NYSDEC, and **OpenStreetMap contributors "
       "(ODbL)** for the campground and portage-route layers.")
     A("")
-    A("## Known limitations — read before using")
-    A("")
-    A("1. **Camping classifications are an interpretation**, not an agency "
-      "determination. They encode published rules per jurisdiction as of "
-      "compilation. Verify before relying on them.")
-    A("2. **`riparian_parcels` positions are approximate.** Parcel records "
-      "are real and carry their county parcel identifier, but each is placed "
-      "at its river mile on the centerline rather than at its true parcel "
-      "centroid. Owner names are public assessment records and only Potter "
-      "and Forest counties publish them; McKean, Armstrong and Clarion "
-      "publish no reachable parcel service at all.")
-    A("3. **New York coverage is thin and that is a real finding**, not an "
-      "omission: no NY public land fronts the centerline anywhere in the "
-      "corridor, and NYSDEC publishes no designated-launch layer for the "
-      "Cattaraugus reach.")
-    A("4. **34.8 miles run through the Seneca Nation's Allegany "
-      "Territory**, where the Nation, not a state agency, is the authority. "
-      "The boundary is included; the rules that apply inside it are not "
-      "state rules.")
-    A("5. **Flow-derived layers are median estimates**, interpolated from "
-      "unit runoff between gages. They are not measurements and not a "
-      "forecast.")
-    A("6. **Campground coverage is uneven** — agency layers cover the "
-      "National Forest well and the private sector barely; the OSM portion "
-      "is volunteer-maintained.")
-    A("")
-    A("## Reproducing it")
-    A("")
-    A("Everything here is rebuilt from public services by "
-      "`python3 scripts/run_all.py`, about ten minutes end to end. No "
-      "layer is hand-digitised and no figure is hand-entered.")
-    A("")
+    A("""## Coverage and limits
 
+- Camping classifications reflect published rules at compilation. This is not legal advice. Check current regulations and permit requirements with the land manager.
+- Parcel points sit on the centerline at the associated river mile.
+- Launch and campground inventories are incomplete.
+- Travel estimates use historical median flows. Check current conditions separately.""")
+    A("")
     out = config.OUT / "DATA_DICTIONARY.md"
     out.write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"  wrote DATA_DICTIONARY.md "

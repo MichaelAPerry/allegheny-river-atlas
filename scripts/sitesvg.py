@@ -376,7 +376,7 @@ def build_strip(modes, intervals, frontage, counties, barriers, towns,
         if b - a > 52:
             out.append(f'<text class="t-nosteward" x="{(a + b) / 2:.1f}" '
                        f'y="{LANE_Y["trail"] + 13.5:.1f}" '
-                       f'text-anchor="middle">no steward</text>')
+                       f'text-anchor="middle">no mapped trail</text>')
 
     # --- county band -------------------------------------------------------
     band(LANE_Y["county"], "COUNTY")

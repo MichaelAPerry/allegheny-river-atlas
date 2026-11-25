@@ -1,117 +1,33 @@
 # Allegheny River Atlas
 
-An open GIS dataset of the Allegheny River from its source in Potter County,
-Pennsylvania to the Point at Pittsburgh — **camping legality, public-land
-frontage, water quality and access, indexed by river mile**.
+The Allegheny River Atlas is an open GIS dataset covering the river from its headwaters in Potter County, Pennsylvania, to the Point in Pittsburgh. I compiled it for paddlers and campers looking for access and overnight options, and for anglers and planners who need river-mile data on water quality, public land, or fishing regulations.
 
-**→ [Paddling the Allegheny](https://michaelaperry.github.io/allegheny-river-atlas/)** —
-launches, legal camping, live USGS flow and who to ring, by river mile.
-**→ [Full atlas map](https://michaelaperry.github.io/allegheny-river-atlas/map.html)** —
-every layer, toggled separately.
+## Use the maps
 
-The atlas map is one HTML file with no tiles, no images and no external
-requests. It opens offline, and it works behind a content-security policy
-that blocks third-party tile hosts.
+- [Paddling the Allegheny](https://michaelaperry.github.io/allegheny-river-atlas/) is the online trip map, starting at Coudersport. Search for a town, launch, campground, or river mile. Select a feature for details. The basemap and current USGS gage readings require a connection.
+- [Offline river map](https://michaelaperry.github.io/allegheny-river-atlas/map.html) shows selected atlas layers. Save `map.html` and open it in a browser. Drag to pan, use the zoom buttons, and use the layer checkboxes to choose what to display. Select a marker or a trail segment for details. The map works from that one file. Links to guides and downloads require a connection.
 
-**Know a launch that is not on here?** State and federal mapping lags badly
-on township ramps, club accesses and informal gravel bars.
-[Send it](../../issues/new?title=Launch%20or%20correction) — a town and a road
-name is enough.
+[Report a missing launch or a correction](https://github.com/MichaelAPerry/allegheny-river-atlas/issues/new?title=Launch%20or%20correction). A road name and town or coordinates will help me locate it.
 
-`docs/allegheny_river_atlas.gpkg` — one OGC GeoPackage, 23 layers, EPSG:4326,
-3 MB. Drag it into QGIS. Works in ArcGIS Pro, R `sf`, `geopandas`, GDAL/OGR.
+## Get the data
 
-## Why this exists
+[Download the GeoPackage](docs/allegheny_river_atlas.gpkg) and open it in QGIS, ArcGIS Pro, or another GIS that reads GeoPackage. The file has 22 spatial layers and one metadata table in a single package. Spatial layers use WGS 84 (EPSG:4326). The [data dictionary](docs/DATA_DICTIONARY.md) lists the layers, fields, and sources.
 
-The Allegheny is well mapped as a *line* and poorly mapped as a *place you are
-allowed to be*. This dataset answers the second question.
+River miles increase upstream from mile 0 at the mouth in Pittsburgh. The trip maps begin near Coudersport at mile 312.2. The GIS centerline extends farther upstream and measures 322.579 miles. It follows 652 USGS NHDPlus High Resolution flowlines. The atlas records a mean absolute difference of 0.049 mile against mapped NHD lock chambers. The five published lock comparisons round to a mean of 0.050 mile. At Kinzua Dam, the atlas mile is 200.05 and the published navigation mile is 197.9.
 
-Three findings drove the rest of it:
+## What the data shows
 
-- **Only about 12% of the river has legal public dispersed camping.** Three
-  separate stretches longer than 25 miles have none of any kind reachable from
-  the water — the longest runs 107 miles.
-- **Inside the Allegheny National Forest proclamation boundary, less than half
-  the river frontage is actually federal land.** Of 94 frontage miles, 44 are
-  federal and 50 are private inholdings that read as National Forest on a
-  general-purpose map.
-- **Roughly 175 river miles — over half the route — carry a "Not Supporting"
-  water-quality status** in EPA ATTAINS.
-- **Four bodies steward stretches of this river and Pennsylvania's published
-  GIS maps one of them.** The other three reaches are signed, launched and
-  maintained by organisations you can ring, and appear on no map. Seventy-one
-  miles have no steward at all.
+- The atlas classifies about **12% of the Coudersport-to-Pittsburgh route** as having public frontage where dispersed camping is permitted. That is 37.41 river miles after combining overlapping spans.
+- The EPA ATTAINS layer records **175.39 river miles as “Not Supporting”** in the September 2026 compilation.
+- Four water-trail reaches are recorded in the atlas. About **71 miles** of the trip route fall outside those reaches.
+- The frontage layer records about **44 miles** under the National Forest designation and lists designated wilderness separately. Check mapped ownership before using land within the broader forest boundary.
 
-## The river-mile convention
+## Limits and attribution
 
-Everything is keyed to **river mile 0.0 at the mouth, increasing upstream** —
-the USACE Allegheny navigation convention. Coudersport is RM 312.2. Every layer
-carries a `river_mile`, or an upstream/downstream pair, so any two layers join
-on position without a spatial operation.
+Camping classifications reflect my reading of the published rules at compilation. **This is not legal advice. Check current regulations, access and any permit requirements with the land manager before camping.** About 34.8 river miles cross the Seneca Nation’s Allegany Territory. Check with the Nation about access, fishing and camping there.
 
-The centerline is the USGS NHDPlus High Resolution mainstem: 652 flowlines on a
-single level path with an unbroken FromNode/ToNode chain, measured geodesically
-on the WGS 84 ellipsoid. It validates against NHD's own mapped lock chambers to
-a **mean absolute deviation of 0.049 mile**.
+The travel bands use estimated July median flows. Check current conditions before a trip. Launch and campground coverage varies by area. A campground marker shows its location and distance from the river. Confirm access from the water with the operator. The parcel layer includes parcel identifiers and approximate locations along the river.
 
-## Nine layers that exist nowhere else
+The [license](LICENSE) covers the compilation and attribution. The derived layers are released under CC BY 4.0. Source data retains its own terms, including ODbL for the OpenStreetMap contributions to campground and portage data. The data dictionary lists the source for each layer.
 
-These were river-mile span tables — the analytical output — cut from the
-centerline into real geometry so they can be mapped and intersected:
-
-| Layer | What it is |
-|---|---|
-| `river_camping_legality` | Every public tract's frontage, classified against that jurisdiction's actual camping rules |
-| `river_public_land_frontage` | Measured along-channel frontage per tract, federal ownership only |
-| `river_traverse_mode` | Estimated median discharge applied to drainage area: drag / wade / float |
-| `river_water_quality` | EPA ATTAINS impairment, merged and clipped to the mainstem |
-| `river_fishing_regulations` | PFBC regulation sections as river geometry |
-| `river_fish_advisories` | Consumption advisory extents |
-| `river_drone_restrictions` | Wilderness Act §4(c) applied to wilderness boundaries |
-| `water_trails` | Each stewarded reach with the body that stewards it, its address, phone and guide — only one of the four is mapped in any public GIS |
-| `water_trail_gaps` | The 71 river miles no water trail covers |
-
-See [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) for every layer, field
-meanings, provenance and stated limitations.
-
-## What is deliberately not here
-
-The working dataset identifies riparian parcels along stretches with no lawful
-public campsite, and for two counties those records carry owner names and home
-mailing addresses. **Those are not republished here.** They are public records,
-and looking one up to write and ask a landowner for permission is
-proportionate; aggregating them onto the open web under a heading about where
-to camp is not. Parcel identifiers, county and municipality are included, so
-anyone can make their own enquiry through the county assessment office.
-
-## Limitations — read before relying on it
-
-1. **Camping classifications are an interpretation** of published rules, not an
-   agency determination.
-2. **Flow-derived layers are median estimates**, interpolated from unit runoff
-   between gages. Not measurements, not a forecast.
-3. **34.8 miles run through the Seneca Nation's Allegany Territory**, where the
-   Nation — not a state agency — is the authority. The boundary is included;
-   the rules that apply inside it are not state rules.
-4. **No New York public land fronts the centerline** anywhere in the corridor,
-   and NYSDEC publishes no designated-launch layer for the Cattaraugus reach.
-   That is a finding, not an omission.
-5. **Campground coverage is uneven** — agency layers cover the National Forest
-   well and the private sector barely.
-
-## Licence
-
-The compilation is **CC BY 4.0**. Underlying data remains under its own terms
-and must be attributed: USGS · US EPA · USDA Forest Service · PA Fish & Boat
-Commission, PA DCNR and PA Game Commission via PASDA · NYSDEC · county
-assessment offices · **OpenStreetMap contributors (ODbL)** for the campground
-and Kinzua portage layers. See [`LICENSE`](LICENSE).
-
-## Rebuilding it
-
-The scripts in `scripts/` rebuild the package and the site from the full
-pipeline in the source project: `22_package.py` cuts the analysis into the
-GeoPackage, `sitesvg.py` draws the two figures on the landing page straight
-from the processed data, and `23_publish_build.py` strips the personal columns
-and assembles `docs/`. Nothing here is hand-digitised and no figure is
-hand-entered.
+The scripts in `scripts/` are the packaging and publication stages. They depend on processed files and helper modules from the full source project.

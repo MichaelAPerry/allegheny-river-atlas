@@ -23,13 +23,10 @@ Underlying data remains under its own terms and must be attributed:
   OpenStreetMap contributors - campgrounds and the Kinzua portage route
          Open Database License (ODbL) - share-alike applies to these layers
 
-NOT INCLUDED
-Owner names and mailing addresses from county assessment records are
-deliberately excluded from this public release. Parcel identifiers are
-included so anyone may make their own enquiry through the county office.
+PARCEL RECORDS
+Use the parcel identifier to consult county assessment records.
 
 NO WARRANTY
-Camping legality classifications are an interpretation of published rules,
-not an agency determination. Flow-derived layers are median estimates, not
-measurements or forecasts. Verify anything you intend to rely on with the
-responsible agency or nation before acting on it.
+Camping classifications reflect published rules at compilation. This is
+not legal advice. Check current regulations and permits with the responsible
+agency or nation. Flow-derived layers use historical median estimates.

@@ -1,22 +1,5 @@
 #!/usr/bin/env python3
-"""
-Step 24 - who stewards each reach of this river.
-
-A water trail confers no right of access. What it gives a paddler is a named
-body that signs the reach, keeps the launches open and will answer the phone
-about a closed one - which is the fact worth carrying on a map, and the fact
-that was missing from it.
-
-Pennsylvania's published GIS maps exactly one Allegheny mainstem trail, so
-its span is measured from that geometry. The other stewarded reaches are real
-and unmapped, so their extents are anchored to launches and towns already
-located on this project's own centerline, and every row says which it was.
-
-Outputs
-  data/processed/water_trails.csv
-  data/processed/water_trails.geojson
-  data/processed/water_trail_gaps.csv    reaches with no steward at all
-"""
+"""Compile water-trail reaches, steward contacts and gaps."""
 from __future__ import annotations
 
 import json
@@ -132,7 +115,7 @@ def build(ri: riverindex.RiverIndex,
     df = pd.DataFrame(rows).sort_values("rm_hi", ascending=False)
     df.to_csv(config.PROC / "water_trails.csv", index=False)
 
-    # the reaches nobody stewards - what is left once the trails are removed
+    # Reaches outside the mapped water trails
     covered = _merge([(r["rm_hi"], r["rm_lo"]) for _, r in df.iterrows()])
     top = float(json.loads(
         (config.PROC / "river_geometry_meta.json").read_text()
@@ -157,7 +140,7 @@ def build(ri: riverindex.RiverIndex,
     tot = sum(min(h, top) - max(l, 0.0) for h, l in covered)
     print(f"    {len(df)} stewarded reaches covering {tot:.0f} of "
           f"{top:.0f} river miles; "
-          f"{len(gaps)} reach(es) with no steward")
+          f"{len(gaps)} reach(es) outside mapped water trails")
     for _, r in df.iterrows():
         print(f"      RM {r['rm_hi']:6.1f}-{r['rm_lo']:5.1f}  "
               f"{r['steward'][:44]:<44} {r['steward_phone']}")

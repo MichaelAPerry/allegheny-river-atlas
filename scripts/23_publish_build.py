@@ -1,39 +1,10 @@
 #!/usr/bin/env python3
-"""
-Step 21 - build a publishable static site for the atlas.
-
-Produces docs/, which GitHub Pages serves directly and which can equally be
-uploaded to any static host.
-
-IMPORTANT - what is deliberately removed before publication:
-
-The working GeoPackage's `riparian_parcels` layer carries **owner names and
-home mailing addresses for eleven named private individuals**, taken from
-county assessment records. Those records are public, and looking one up to
-write and ask a landowner for permission is a normal, proportionate thing to
-do. **Republishing them, aggregated, on the open web, in a dataset captioned
-"riverbank you might want to camp on", is a different act.** It changes the
-cost of finding them from "visit the county office" to "one search", and the
-people concerned never chose to be in a public dataset about a stranger's
-expedition.
-
-So the public build keeps the parcel identifier, county, municipality and
-river mile - everything a third party needs to do their own lookup through
-the proper channel - and drops the name and address columns. The full version
-stays local for the trip's own use.
-
-The landing page itself is step 25, which links to everything here.
-
-Outputs
-  docs/map.html                        the full interactive map, self-contained
-  docs/allegheny_river_atlas.gpkg      public build, no personal data
-  docs/DATA_DICTIONARY.md
-  docs/LICENSE.txt
-  docs/CNAME.example
-"""
+"""Publish the static atlas files and omit private contact fields from the public GeoPackage."""
 from __future__ import annotations
 
 import datetime as dt
+import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -63,6 +34,8 @@ def build_public_gpkg() -> list[tuple[str, int, str]]:
     written, first, redacted = [], True, 0
     for name in layers:
         g = gpd.read_file(SRC_GPKG, layer=name)
+        if name == "water_trails" and "steward_email" in g.columns:
+            g["steward_email"] = None
         drop = [c for c in g.columns if c in REDACT]
         if drop:
             g = g.drop(columns=drop)
@@ -97,24 +70,25 @@ def main() -> None:
 
     shutil.copy(config.OUT / "DATA_DICTIONARY.md", DOCS / "DATA_DICTIONARY.md")
 
-    # The interactive map is already self-contained - no tiles, no images,
-    # no external requests - so it drops onto a static host unchanged. The one
-    # thing it lacks as a standalone file is a way back, which only exists once
-    # it sits beside index.html, so the link is added on the way in.
-    m = (config.OUT / "map.html").read_text(encoding="utf-8")
-    back = ('<a class="back" href="./">&larr; Atlas</a>\n'
-            '    <h1>Allegheny Descent</h1>')
-    assert "<h1>Allegheny Descent</h1>" in m
-    m = m.replace("<h1>Allegheny Descent</h1>", back, 1)
-    m = m.replace(".head .sub{",
-                  ".head .back{color:var(--ink-2);text-decoration:none;"
-                  "font-size:12.5px;border:1px solid var(--rule);"
-                  "border-radius:6px;padding:4px 9px;white-space:nowrap}\n"
-                  ".head .back:hover{color:var(--ink);border-color:var(--ink-3)}\n"
-                  ".head .sub{", 1)
-    (DOCS / "map.html").write_text(m, encoding="utf-8")
+    # Refresh the data in the checked-in offline map presentation.
+    payload_pattern = re.compile(r"^const D = (.*);$", re.MULTILINE)
+    generated_map = (config.OUT / "map.html").read_text(encoding="utf-8")
+    payload_match = payload_pattern.search(generated_map)
+    if payload_match is None:
+        raise ValueError("Generated map is missing its embedded data")
+    payload = json.loads(payload_match[1])
+    for trail in payload.get("trails", []):
+        trail.pop("email", None)
 
-
+    map_path = DOCS / "map.html"
+    map_html = map_path.read_text(encoding="utf-8")
+    data_line = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace(
+        "<", r"\u003c")
+    map_html, replaced = payload_pattern.subn(
+        lambda _: f"const D = {data_line};", map_html)
+    if replaced != 1:
+        raise ValueError("Expected one embedded data block in the public map")
+    map_path.write_text(map_html, encoding="utf-8")
 
     (DOCS / "LICENSE.txt").write_text(f"""Allegheny River Atlas
 Compiled {TODAY} by Michael Perry.
@@ -141,16 +115,13 @@ Underlying data remains under its own terms and must be attributed:
   OpenStreetMap contributors - campgrounds and the Kinzua portage route
          Open Database License (ODbL) - share-alike applies to these layers
 
-NOT INCLUDED
-Owner names and mailing addresses from county assessment records are
-deliberately excluded from this public release. Parcel identifiers are
-included so anyone may make their own enquiry through the county office.
+PARCEL RECORDS
+Use the parcel identifier to consult county assessment records.
 
 NO WARRANTY
-Camping legality classifications are an interpretation of published rules,
-not an agency determination. Flow-derived layers are median estimates, not
-measurements or forecasts. Verify anything you intend to rely on with the
-responsible agency or nation before acting on it.
+Camping classifications reflect published rules at compilation. This is
+not legal advice. Check current regulations and permits with the responsible
+agency or nation. Flow-derived layers use historical median estimates.
 """, encoding="utf-8")
 
     (DOCS / "CNAME.example").write_text(

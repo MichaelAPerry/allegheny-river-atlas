@@ -1,23 +1,5 @@
 #!/usr/bin/env python3
-"""
-Step 26 - the link preview card.
-
-A link with no preview looks like spam. This river gets shared by text
-message, in Messenger, in Facebook groups and in Slack, and every one of
-those unfurls og:image - so the card is the first thing anyone sees of this
-project, before they decide whether to tap.
-
-Draws the river's own shape, which is the one image this project has that
-nobody else's page has, and renders it to a 1200x630 PNG.
-
-Rendering needs a browser. Playwright's chromium is used when it is present;
-without it the step writes the card's HTML and says so, and the committed
-og.png stays as it is - it only changes when the river does.
-
-Outputs
-  docs/og.html   the card source, for regenerating by hand if need be
-  docs/og.png    1200x630, referenced by og:image
-"""
+"""Render the atlas link preview from the river centerline."""
 from __future__ import annotations
 
 import math
@@ -113,14 +95,13 @@ def sitesvg_end(which: str):
 
 CARD = """<!doctype html>
 <html><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 :root{--ground:#f6f5f1;--ink:#1b2023;--ink2:#5f6a70;--ink3:#8d979c;
   --m-float:#2d6b7c;--m-wade:#bf8a2c;--m-drag:#a6433b;--camp:#3e7a4b;
   --rule:#dedbd3;}
 *{box-sizing:border-box;margin:0}
 body{width:__W__px;height:__H__px;background:var(--ground);color:var(--ink);
-  font-family:"IBM Plex Sans",sans-serif;display:flex;overflow:hidden}
+  font-family:"IBM Plex Sans",system-ui,sans-serif;display:flex;overflow:hidden}
 .l{flex:1;padding:62px 0 52px 68px;display:flex;flex-direction:column;
   justify-content:center}
 .kicker{font-size:17px;letter-spacing:.17em;text-transform:uppercase;
@@ -140,11 +121,11 @@ p{font-size:25px;line-height:1.36;color:var(--ink2);max-width:19ch}
   <div class="l">
     <div class="kicker">Coudersport to Pittsburgh</div>
     <h1>Paddling the<br>Allegheny</h1>
-    <p>Launches, legal camping, live flow and who to ring — by river mile.</p>
+    <p>River access and camping by river mile.</p>
     <div class="stats">
       <div class="s"><b>__RM__</b><span>river miles</span></div>
       <div class="s"><b>__LAUNCH__</b><span>public launches</span></div>
-      <div class="s"><b>__GAGE__</b><span>live gages</span></div>
+      <div class="s"><b>__GAGE__</b><span>USGS gages</span></div>
     </div>
   </div>
   <div class="r">__RIVER__</div>
