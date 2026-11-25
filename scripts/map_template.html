@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Allegheny River Atlas | Offline map</title>
+<style>
+:root{
+  --ground:#f6f5f1; --panel:#fffefb; --ink:#1b2023; --ink-2:#5f6a70;
+  --ink-3:#8d979c; --rule:#dedbd3; --rule-2:#eae7e0;
+  --water:#2d6b7c; --water-2:#7fb0bc;
+  --drag:#a6433b; --wade:#c98a2e; --float:#2d6b7c;
+  --ok:#3e7a4b; --desig:#4f87a3; --tribal:#a2762f; --none:#a6433b; --trail:#3f6f86;
+  --land-nf:#cfdcc9; --land-wild:#b9cfae; --land-sf:#d8e0cc;
+  --land-sgl:#e5ddc8; --land-sp:#cfd9e2; --land-trib:#e8dcc4;
+  --shadow:0 1px 2px rgba(27,32,35,.06),0 6px 20px rgba(27,32,35,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#15181b; --panel:#1c2125; --ink:#e8e6e0; --ink-2:#a3adb2;
+  --ink-3:#6f797e; --rule:#2c3338; --rule-2:#232a2e;
+  --water:#6ba8ba; --water-2:#3d6b78;
+  --drag:#d9756b; --wade:#e0ab5c; --float:#6ba8ba;
+  --ok:#6aa878; --desig:#7db0cb; --tribal:#cfa55f; --none:#d9756b; --trail:#4d8098;
+  --land-nf:#2a3a2c; --land-wild:#33472f; --land-sf:#2f3a2c;
+  --land-sgl:#3a3527; --land-sp:#2a323a; --land-trib:#3b3325;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --ground:#15181b; --panel:#1c2125; --ink:#e8e6e0; --ink-2:#a3adb2;
+  --ink-3:#6f797e; --rule:#2c3338; --rule-2:#232a2e;
+  --water:#6ba8ba; --water-2:#3d6b78;
+  --drag:#d9756b; --wade:#e0ab5c; --float:#6ba8ba;
+  --ok:#6aa878; --desig:#7db0cb; --tribal:#cfa55f; --none:#d9756b; --trail:#4d8098;
+  --land-nf:#2a3a2c; --land-wild:#33472f; --land-sf:#2f3a2c;
+  --land-sgl:#3a3527; --land-sp:#2a323a; --land-trib:#3b3325;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:14px;line-height:1.45;-webkit-text-size-adjust:100%}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+h1{font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em;
+  text-wrap:balance}
+h2{font-size:11px;font-weight:600;margin:0;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--ink-3)}
+.wrap{display:grid;grid-template-columns:288px minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr) auto;height:100%}
+.head{grid-column:1/-1;display:flex;align-items:baseline;gap:14px;
+  flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--rule);
+  background:var(--panel)}
+.head .back{color:var(--ink-2);text-decoration:none;font-size:12.5px;border:1px solid var(--rule);border-radius:6px;padding:4px 9px;white-space:nowrap}
+.head .back:hover{color:var(--ink);border-color:var(--ink-3)}
+.head .sub{color:var(--ink-2);font-size:12.5px}
+.head .stats{margin-left:auto;display:flex;gap:16px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;line-height:1.15}
+.stat b{font-size:15px;font-weight:600}
+.stat span{font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--ink-3)}
+.rail{border-right:1px solid var(--rule);background:var(--panel);
+  overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;
+  gap:16px}
+.mapbox{position:relative;overflow:hidden;background:var(--ground)}
+.map-credit,.map-status{position:absolute;background:var(--panel);
+  color:var(--ink);font-size:11px;padding:2px 6px}
+.map-credit{right:0;bottom:0}
+.map-status{left:8px;bottom:8px;border-radius:4px}
+svg{display:block;width:100%;height:100%;touch-action:none}
+.strip{grid-column:1/-1;border-top:1px solid var(--rule);
+  background:var(--panel);padding:10px 16px 12px}
+.stripscroll{overflow-x:auto;overflow-y:hidden}
+.stripscroll svg{min-width:620px}
+.layers{display:flex;flex-direction:column;gap:2px}
+.layers label{display:flex;align-items:center;gap:9px;padding:4px 6px;
+  border-radius:5px;cursor:pointer;font-size:13px}
+.layers label:hover{background:var(--rule-2)}
+.layers input{accent-color:var(--water);margin:0;width:14px;height:14px}
+.sw{width:11px;height:11px;border-radius:2px;flex:0 0 auto;
+  border:1px solid rgba(0,0,0,.14)}
+.legend{display:flex;flex-direction:column;gap:5px;font-size:12.5px;
+  color:var(--ink-2)}
+.legend div{display:flex;align-items:center;gap:8px}
+.legend i{width:16px;height:3px;border-radius:2px;flex:0 0 auto}
+.note{font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.info{border:1px solid var(--rule);border-radius:7px;padding:10px 11px;
+  background:var(--ground);min-height:96px;font-size:12.5px}
+.info .t{font-weight:600;font-size:13px;margin-bottom:2px}
+.info dl{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:6px 0 0}
+.info dt{color:var(--ink-3);font-size:11px;text-transform:uppercase;
+  letter-spacing:.05em}
+.info dd{margin:0}
+button.zoom{position:absolute;right:10px;width:28px;height:28px;
+  border:1px solid var(--rule);background:var(--panel);color:var(--ink);
+  border-radius:6px;font-size:15px;cursor:pointer;box-shadow:var(--shadow);
+  line-height:1;display:grid;place-items:center}
+button.zoom:focus-visible,.layers label:focus-within{outline:2px solid var(--water);
+  outline-offset:1px}
+#zin{top:10px}#zout{top:44px}#zrst{top:78px;font-size:10px}
+.pin{cursor:pointer}
+.tip{position:absolute;pointer-events:none;background:var(--panel);
+  border:1px solid var(--rule);border-radius:6px;padding:5px 8px;
+  font-size:12px;box-shadow:var(--shadow);max-width:230px;z-index:5}
+@media (max-width:820px){
+  html,body{height:auto}
+  .wrap{grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto 58vh auto auto;height:auto;min-height:100%}
+  .rail{grid-row:3;border-right:0;border-top:1px solid var(--rule);
+    overflow:visible}
+  .mapbox{grid-row:2;min-height:340px}
+  .strip{grid-row:4}
+  .head .stats{width:100%;margin-left:0;gap:14px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="head">
+    <a class="back" href="https://michaelaperry.github.io/allegheny-river-atlas/">&larr; Online trip map</a>
+    <h1>Allegheny River Atlas</h1>
+    <div class="sub">Offline map from Coudersport to Pittsburgh</div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <aside class="rail">
+    <div>
+      <h2>Layers</h2>
+      <div class="layers" id="layers"></div>
+    </div>
+    <div>
+      <h2>Estimated travel at July median flow</h2>
+      <div class="legend" id="modelegend"></div>
+    </div>
+    <div>
+      <h2>Selection</h2>
+      <div class="info" id="info"><div class="t">Select a marker or trail for details</div></div>
+    </div>
+    <details open>
+      <summary>About and sources</summary>
+      <p>The map is fully usable offline and shows the OpenStreetMap basemap when online.</p>
+      <p>Drag to pan. Use the zoom buttons and layer checkboxes to explore the map. The chart runs downstream from left to right. Scroll sideways on a small screen.</p>
+      <p>Green in the camping row marks public frontage classified for dispersed camping. Tan marks Seneca Nation territory. Small blue ticks mark mapped campgrounds. Other reaches have no mapped public dispersed camping in this atlas.</p>
+      <p><strong>This is not legal advice. Check current regulations, access and permits with the land manager or the Seneca Nation before camping.</strong></p>
+      <p>The map shows selected layers from the atlas. Travel estimates use historical flows. Sources include USGS (NHDPlus HR and gage records), USDA Forest Service, Pennsylvania agencies via PASDA, NYSDEC, trail organizations and OpenStreetMap contributors (ODbL).</p>
+      <p>Derived data are CC BY 4.0. Source data retain their own terms. These links require internet access.</p>
+      <ul>
+        <li><a href="https://michaelaperry.github.io/allegheny-river-atlas/allegheny_river_atlas.gpkg">Download the GeoPackage</a></li>
+        <li><a href="https://michaelaperry.github.io/allegheny-river-atlas/DATA_DICTIONARY.md">Data dictionary and source terms</a></li>
+      </ul>
+    </details>
+  </aside>
+
+  <div class="mapbox" id="mapbox">
+    <svg id="map" role="img" aria-label="Route map of the Allegheny River from Coudersport to Pittsburgh"></svg>
+    <a class="map-credit" id="map-credit" href="https://www.openstreetmap.org/copyright" hidden>© OpenStreetMap contributors</a>
+    <span class="map-status" id="map-status" role="status" hidden>Offline: basemap unavailable</span>
+    <button class="zoom" id="zin" aria-label="Zoom in">+</button>
+    <button class="zoom" id="zout" aria-label="Zoom out">&minus;</button>
+    <button class="zoom" id="zrst" aria-label="Reset view">fit</button>
+  </div>
+
+  <section class="strip">
+    <h2>River mile strip &mdash; RM 312 (Coudersport) to RM 0 (Pittsburgh)</h2>
+    <div class="stripscroll">
+      <svg id="stripsvg" role="img" aria-label="Linear diagram of the route by river mile showing estimated travel, camping classifications, water trails, counties and itinerary stops"></svg>
+    </div>
+  </section>
+</div>
+
+<script>
+const D = __ATLAS_DATA__;
+const SVGNS = "http://www.w3.org/2000/svg";
+const el = (n,a={})=>{const e=document.createElementNS(SVGNS,n);
+  for(const k in a) e.setAttribute(k,a[k]); return e;};
+
+/* ---------- Web Mercator (EPSG:3857) in normalized tile coordinates ---------- */
+const MAX_LAT=85.0511287798066;
+const PX=([lon,lat])=>{
+  const phi=Math.max(-MAX_LAT,Math.min(MAX_LAT,lat))*Math.PI/180;
+  return [(lon+180)/360,(1-Math.asinh(Math.tan(phi))/Math.PI)/2];
+};
+const all=D.river.flatMap(s=>s.coords);
+let bb;
+{ const xs=all.map(p=>PX(p)[0]), ys=all.map(p=>PX(p)[1]);
+  bb={x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; }
+const pad=(bb.x1-bb.x0)*0.03;
+bb={x0:bb.x0-pad,x1:bb.x1+pad,y0:bb.y0-pad,y1:bb.y1+pad};
+const BW=bb.x1-bb.x0, BH=bb.y1-bb.y0;
+
+const MODE_COLOR={drag:"var(--drag)",wade:"var(--wade)",float:"var(--float)"};
+const MODE_LABEL={drag:"Below modeled wading flow",wade:"Estimated wade",float:"Estimated float"};
+const LAND_FILL={"National Forest":"var(--land-nf)",
+  "Designated Wilderness":"var(--land-wild)","State Forest":"var(--land-sf)",
+  "State Game Land":"var(--land-sgl)","State Park":"var(--land-sp)",
+  "Tribal Territory":"var(--land-trib)"};
+
+const LAYERS=[
+  {id:"basemap",label:"OpenStreetMap basemap",on:true,sw:"var(--water-2)"},
+  {id:"land",  label:"Public land",        on:true,  sw:"var(--land-nf)"},
+  {id:"tribal",label:"Seneca Allegany Territory",on:true,sw:"var(--land-trib)"},
+  {id:"river", label:"River by estimated travel mode",    on:true,  sw:"var(--water)"},
+  {id:"trails",label:"Water trails", on:true, sw:"var(--trail)"},
+  {id:"miles", label:"River mile markers",       on:true,  sw:"var(--ink-3)"},
+  {id:"towns", label:"River towns",        on:true,  sw:"var(--ink-2)"},
+  {id:"barriers",label:"Dams and locks",     on:true,  sw:"var(--none)"},
+  {id:"access",label:"Public river access",      on:true,  sw:"var(--desig)"},
+  {id:"camps", label:"Campgrounds",        on:true,  sw:"var(--ok)"},
+  {id:"gages", label:"USGS gages",         on:false, sw:"var(--water-2)"},
+  {id:"stops", label:"Sample itinerary stops",      on:false,  sw:"var(--tribal)"},
+];
+const vis={}; LAYERS.forEach(l=>vis[l.id]=l.on);
+
+/* ---------- header stats ---------- */
+const M=D.meta;
+document.getElementById("stats").innerHTML=[
+  [M.length_mi.toFixed(1),"river miles"],
+  [M.locks,"navigation locks"],
+].map(([b,s])=>`<div class="stat"><b class="mono">${b}</b><span>${s}</span></div>`).join("");
+
+/* ---------- layer toggles ---------- */
+const lay=document.getElementById("layers");
+LAYERS.forEach(l=>{
+  const id="ly-"+l.id;
+  const lb=document.createElement("label"); lb.setAttribute("for",id);
+  lb.innerHTML=`<input type="checkbox" id="${id}" ${l.on?"checked":""}>
+    <span class="sw" style="background:${l.sw}"></span><span>${l.label}</span>`;
+  lb.querySelector("input").addEventListener("change",e=>{
+    vis[l.id]=e.target.checked;
+    if(l.id==="basemap"){tileFailed=false; updateBasemap();}
+    else draw();
+    if(l.id==="stops") stripDraw();});
+  lay.appendChild(lb);
+});
+document.getElementById("modelegend").innerHTML=
+  ["drag","wade","float"].map(m=>{
+    const mi=D.modes.filter(x=>x.mode===m).length*0.5;
+    return `<div><i style="background:${MODE_COLOR[m]}"></i>
+      <span>${MODE_LABEL[m]}</span>
+      <span class="mono" style="margin-left:auto">${mi.toFixed(1)} mi</span></div>`;
+  }).join("")+
+  `<div class="note" style="margin-top:4px">Thresholds: float &ge;
+   ${M.float_cfs} cfs, wade ${M.marginal_cfs}&ndash;${M.float_cfs} cfs,
+   drag &lt; ${M.marginal_cfs} cfs. Check current conditions before traveling.</div>`;
+
+/* ---------- map ---------- */
+const svg=document.getElementById("map"), box=document.getElementById("mapbox");
+let view={x:bb.x0,y:bb.y0,w:BW,h:BH};
+const tileGroup=el("g",{"pointer-events":"none","aria-hidden":"true"});
+svg.appendChild(tileGroup);
+const credit=document.getElementById("map-credit");
+const status=document.getElementById("map-status");
+const visibleTiles=new Map(), tileCache=new Map();
+const CACHE_LIMIT=128;
+let tileFailed=false, tileTimer;
+
+function tileCoverage(v,width){
+  const z=Math.min(19,Math.max(0,Math.round(Math.log2(width/(256*v.w)))));
+  const n=2**z;
+  return {
+    z,n,
+    x0:Math.max(0,Math.floor(v.x*n)),
+    x1:Math.min(n,Math.ceil((v.x+v.w)*n)),
+    y0:Math.max(0,Math.floor(v.y*n)),
+    y1:Math.min(n,Math.ceil((v.y+v.h)*n))
+  };
+}
+
+function updateBasemap(){
+  clearTimeout(tileTimer);
+  const unavailable=!navigator.onLine||tileFailed;
+  status.hidden=!vis.basemap||!unavailable;
+  const width=box.clientWidth;
+  const wanted=new Set();
+  let coverage;
+  if(vis.basemap&&!unavailable&&width>0){
+    coverage=tileCoverage(view,width);
+    const {z,x0,x1,y0,y1}=coverage;
+    for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) wanted.add(`${z}/${x}/${y}`);
+  }
+
+  for(const [key,tile] of visibleTiles){
+    if(wanted.has(key)) continue;
+    tile.image.remove();
+    visibleTiles.delete(key);
+    if(tile.loaded){
+      tileCache.set(key,tile);
+      if(tileCache.size>CACHE_LIMIT) tileCache.delete(tileCache.keys().next().value);
+    }
+  }
+  credit.hidden=wanted.size===0;
+  if(!coverage) return;
+
+  // Reuse images immediately. Request missing tiles once the view settles.
+  const missing=[];
+  for(const key of wanted){
+    if(visibleTiles.has(key)) continue;
+    const cached=tileCache.get(key);
+    if(cached){
+      tileCache.delete(key);
+      visibleTiles.set(key,cached);
+      tileGroup.appendChild(cached.image);
+    }else missing.push(key);
+  }
+  if(missing.length){
+    tileTimer=setTimeout(()=>{
+      for(const key of missing) loadTile(key,coverage.n);
+    },120);
+  }
+}
+
+function loadTile(key,n){
+  const [,x,y]=key.split("/").map(Number);
+  const image=el("image",{x:x/n,y:y/n,width:1/n,height:1/n});
+  const tile={image,loaded:false};
+  image.addEventListener("load",()=>{tile.loaded=true;},{once:true});
+  image.addEventListener("error",()=>{
+    if(visibleTiles.get(key)!==tile) return;
+    tileFailed=true;
+    updateBasemap();
+  },{once:true});
+  visibleTiles.set(key,tile);
+  tileGroup.appendChild(image);
+  image.setAttribute("href",`https://tile.openstreetmap.org/${key}.png`);
+}
+
+addEventListener("offline",updateBasemap);
+addEventListener("online",()=>{tileFailed=false; updateBasemap();});
+
+function fit(){
+  const r=box.getBoundingClientRect();
+  const ar=r.width/Math.max(r.height,1), br=BW/BH;
+  let w=BW,h=BH;
+  if(ar>br) w=BH*ar; else h=BW/ar;
+  view={x:bb.x0-(w-BW)/2,y:bb.y0-(h-BH)/2,w:w,h:h};
+  apply();
+}
+function apply(){svg.setAttribute("viewBox",
+  `${view.x} ${view.y} ${view.w} ${view.h}`); updateBasemap(); draw();}
+function zoom(f,cx,cy){
+  const r=box.getBoundingClientRect();
+  cx=cx??view.x+view.w/2; cy=cy??view.y+view.h/2;
+  const nw=Math.min(Math.max(view.w*f,BW/60),BW*3), nh=nw*(view.h/view.w);
+  view={x:cx-(cx-view.x)*(nw/view.w),y:cy-(cy-view.y)*(nh/view.h),w:nw,h:nh};
+  apply();
+}
+document.getElementById("zin").onclick=()=>zoom(1/1.5);
+document.getElementById("zout").onclick=()=>zoom(1.5);
+document.getElementById("zrst").onclick=fit;
+
+let drag=null;
+const toUser=(e,v=view)=>{const r=box.getBoundingClientRect();
+  return [v.x+(e.clientX-r.left)/r.width*v.w,
+          v.y+(e.clientY-r.top)/r.height*v.h];};
+box.addEventListener("pointerdown",e=>{
+  if(e.target.closest(".pin, button, a")) return;
+  drag={p:toUser(e),v:{...view}};
+  box.setPointerCapture(e.pointerId);});
+box.addEventListener("pointermove",e=>{
+  if(!drag) return; const p=toUser(e,drag.v);
+  view={...drag.v,x:drag.v.x-(p[0]-drag.p[0]),y:drag.v.y-(p[1]-drag.p[1])};
+  apply();});
+box.addEventListener("pointerup",()=>drag=null);
+box.addEventListener("pointercancel",()=>drag=null);
+box.addEventListener("wheel",e=>{e.preventDefault();
+  const p=toUser(e); zoom(e.deltaY>0?1.18:1/1.18,p[0],p[1]);},{passive:false});
+
+const tip=document.createElement("div"); tip.className="tip"; tip.hidden=true;
+box.appendChild(tip);
+function showTip(e,html){tip.innerHTML=html; tip.hidden=false;
+  const r=box.getBoundingClientRect();
+  tip.style.left=Math.min(e.clientX-r.left+12,r.width-240)+"px";
+  tip.style.top=Math.max(e.clientY-r.top-10,4)+"px";}
+function hideTip(){tip.hidden=true;}
+
+const info=document.getElementById("info");
+function select(title,rows,note){
+  info.innerHTML=`<div class="t">${title}</div>`+
+    (rows.length?`<dl>${rows.map(([k,v])=>
+      `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`:"")+
+    (note?`<div class="note" style="margin-top:6px">${note}</div>`:"");
+}
+
+function draw(){
+  while(svg.lastChild!==tileGroup) svg.lastChild.remove();
+  const s=view.w/BW;                    /* scale factor: 1 = fitted */
+  const u=view.w/1000;                  /* one "pixel" in user units */
+
+  if(vis.land) D.land.forEach(L=>{
+    if(L.desig==="Tribal Territory") return;
+    L.rings.forEach(r=>{
+      const p=el("path",{d:"M"+r.map(c=>PX(c).join(",")).join("L")+"Z",
+        fill:LAND_FILL[L.desig]||"var(--rule)",stroke:"none","fill-opacity":.85});
+      p.addEventListener("pointerenter",e=>showTip(e,
+        `<b>${L.name}</b><br>${L.desig}`));
+      p.addEventListener("pointerleave",hideTip);
+      svg.appendChild(p);});
+  });
+  if(vis.tribal) D.land.filter(L=>L.desig==="Tribal Territory").forEach(L=>{
+    L.rings.forEach(r=>{
+      const p=el("path",{d:"M"+r.map(c=>PX(c).join(",")).join("L")+"Z",
+        fill:"var(--land-trib)",stroke:"var(--tribal)","stroke-width":1.4*u,
+        "fill-opacity":.7,"stroke-dasharray":`${5*u} ${3*u}`});
+      p.addEventListener("pointerenter",e=>showTip(e,
+        `<b>${L.name}</b><br>Seneca Nation jurisdiction`));
+      p.addEventListener("pointerleave",hideTip);
+      svg.appendChild(p);});
+  });
+
+  if(vis.trails) D.trails.forEach(t=>{
+    const d="M"+t.coords.map(c=>PX(c).join(",")).join("L");
+    const p=el("path",{d:d,fill:"none",stroke:"var(--trail)",
+      "stroke-width":9*u,"stroke-opacity":t.designated?.42:.22,
+      "stroke-linecap":"round","stroke-linejoin":"round",class:"pin"});
+    p.addEventListener("pointerenter",e=>showTip(e,
+      `<b>${t.steward}</b><br>${t.name}<br>RM ${t.hi.toFixed(1)}–${t.lo.toFixed(1)}`));
+    p.addEventListener("pointerleave",hideTip);
+    p.addEventListener("click",()=>selTrail(t));
+    svg.appendChild(p);
+  });
+
+  if(vis.river) D.river.forEach(sg=>{
+    const d="M"+sg.coords.map(c=>PX(c).join(",")).join("L");
+    svg.appendChild(el("path",{d:d,fill:"none",stroke:MODE_COLOR[sg.mode],
+      "stroke-width":(sg.mode==="float"?2.6:3.6)*u,"stroke-linecap":"round",
+      "stroke-linejoin":"round"}));
+  });
+
+  if(vis.miles){
+    const step=view.w/BW>0.45?20:(view.w/BW>0.18?10:5);
+    D.modes.filter(m=>Math.abs(m.rm/step-Math.round(m.rm/step))<1e-6)
+      .forEach(m=>{
+      const seg=D.river.find(s=>m.rm<=s.rm_hi&&m.rm>=s.rm_lo)||D.river[0];
+      const f=(seg.rm_hi-m.rm)/Math.max(seg.rm_hi-seg.rm_lo,1e-6);
+      const i=Math.min(Math.round(f*(seg.coords.length-1)),seg.coords.length-1);
+      const [x,y]=PX(seg.coords[i]);
+      svg.appendChild(el("circle",{cx:x,cy:y,r:1.7*u,fill:"var(--ground)",
+        stroke:"var(--ink-3)","stroke-width":1*u}));
+      const t=el("text",{x:x+4.5*u,y:y-3.5*u,"font-size":11.5*u,
+        fill:"var(--ink-3)","font-family":"IBM Plex Mono, monospace"});
+      t.textContent=m.rm.toFixed(0); svg.appendChild(t);
+    });
+  }
+
+  if(vis.towns) D.towns.forEach(t=>{
+    const [x,y]=PX([t.lon,t.lat]);
+    svg.appendChild(el("rect",{x:x-1.4*u,y:y-1.4*u,width:2.8*u,height:2.8*u,
+      fill:"var(--ink-2)"}));
+    if(s<0.6||t.rm>300||["Warren","Olean","Salamanca","Franklin","Kittanning",
+        "Pittsburgh","Coudersport","Port Allegany","Tionesta","Emlenton",
+        "Oil City","Tidioute","Eldred","Freeport","Natrona","Parker"]
+        .includes(t.name)){
+      const tx=el("text",{x:x+5*u,y:y+3.8*u,"font-size":12.5*u,
+        fill:"var(--ink-2)","font-weight":500});
+      tx.textContent=t.name; svg.appendChild(tx);
+    }
+  });
+
+  const marker=(o,fill,shape,layer,onsel)=>{
+    const [x,y]=PX([o.lon,o.lat]); let g;
+    if(shape==="tri"){
+      const r=4*u;
+      g=el("path",{d:`M${x},${y-r}L${x+r},${y+r*0.8}L${x-r},${y+r*0.8}Z`,
+        fill:fill,stroke:"var(--panel)","stroke-width":1*u});
+    }else if(shape==="sq"){
+      const r=3.2*u;
+      g=el("rect",{x:x-r,y:y-r,width:2*r,height:2*r,rx:0.8*u,fill:fill,
+        stroke:"var(--panel)","stroke-width":1*u});
+    }else{
+      g=el("circle",{cx:x,cy:y,r:3.4*u,fill:fill,stroke:"var(--panel)",
+        "stroke-width":1*u});
+    }
+    g.setAttribute("class","pin");
+    g.addEventListener("pointerenter",e=>showTip(e,layer(o)));
+    g.addEventListener("pointerleave",hideTip);
+    g.addEventListener("click",ev=>{ev.stopPropagation(); onsel(o);});
+    svg.appendChild(g);
+  };
+
+  if(vis.access) D.access.forEach(a=>marker(a,"var(--desig)","sq",
+    o=>`<b>${o.name}</b><br>RM ${o.rm.toFixed(2)} &middot; ${o.agency}`,
+    o=>select(o.name,[["River mile",o.rm.toFixed(2)],["Agency",o.agency],
+      ["Off centerline",o.offset.toFixed(0)+" m"],
+      ["Coordinates",o.lat.toFixed(5)+", "+o.lon.toFixed(5)]],
+      "Designated public access.")));
+
+  if(vis.camps) D.camps.forEach(c=>marker(c,"var(--ok)","circle",
+    o=>`<b>${o.name}</b><br>RM ${o.rm.toFixed(2)} &middot; ${o.offset.toFixed(0)} m off river`,
+    o=>select(o.name,[["River mile",o.rm.toFixed(2)],
+      ["Off centerline",o.offset.toFixed(0)+" m"],["Operator",o.op||"—"],
+      ["Source",o.src]],"Confirm access from the river with the campground operator.")));
+
+  if(vis.gages) D.gages.forEach(gg=>marker(gg,"var(--water-2)","circle",
+    o=>`<b>${o.name}</b><br>${o.now!=null?o.now.toFixed(0)+" cfs (saved reading)":"no saved reading"}`,
+    o=>select(o.name,[["USGS site",o.site],["River mile",o.rm.toFixed(2)],
+      ["Saved reading",o.now!=null?o.now.toFixed(0)+" cfs":"—"],
+      ["Historical daily median",o.med!=null?o.med.toFixed(0)+" cfs":"—"],
+      ["Drainage area",o.da!=null?o.da.toFixed(0)+" mi²":"—"]],
+      `<a href="https://waterdata.usgs.gov/monitoring-location/${o.site}/">Check current readings at USGS</a>`)));
+
+  if(vis.barriers) D.barriers.forEach(b=>marker(b,"var(--none)","tri",
+    o=>`<b>${o.name}</b><br>RM ${o.rm.toFixed(2)}`,
+    o=>select(o.name,[["River mile (computed)",o.rm.toFixed(2)],
+      ["River mile (published)",o.published_rm.toFixed(1)],
+      ["Transit",o.kind==="dam_portage"?"Confirm portage access":"Check lock hours"]],
+      o.kind==="dam_portage"?"Kinzua Dam has no navigation lock.":
+      "Confirm lock hours with the USACE Pittsburgh District before departure.")));
+
+  if(vis.stops) D.stops.forEach(st=>{
+    const f=/SENECA/.test(st.status)?"var(--tribal)":
+      /NO LEGAL/.test(st.status)?"var(--none)":
+      /unverified/.test(st.status)?"var(--wade)":"var(--ok)";
+    const [x,y]=PX([st.lon,st.lat]);
+    const g=el("circle",{cx:x,cy:y,r:5*u,fill:f,stroke:"var(--panel)",
+      "stroke-width":1.6*u,class:"pin"});
+    g.addEventListener("pointerenter",e=>showTip(e,
+      `<b>Itinerary stop ${st.day}</b> &middot; RM ${st.rm.toFixed(2)}<br>${st.name}`));
+    g.addEventListener("pointerleave",hideTip);
+    g.addEventListener("click",ev=>{ev.stopPropagation(); selStop(st);});
+    svg.appendChild(g);
+    if(s<0.35){const t=el("text",{x:x,y:y+2.8*u,"font-size":7*u,
+      fill:"var(--panel)","text-anchor":"middle","font-weight":600,
+      "font-family":"IBM Plex Mono, monospace"});
+      t.textContent=st.day; svg.appendChild(t);}
+  });
+
+  {const p=D.putin; const [x,y]=PX([p.lon,p.lat]);
+   svg.appendChild(el("circle",{cx:x,cy:y,r:6*u,fill:"none",
+     stroke:"var(--water)","stroke-width":1.6*u,
+     "stroke-dasharray":`${3*u} ${2*u}`}));}
+}
+
+function selTrail(t){
+  const rows=[["Reach","RM "+t.hi.toFixed(1)+"–"+t.lo.toFixed(1)+
+      " · "+t.mi.toFixed(0)+" mi"],
+    ["Status",t.status],
+    ["Steward",t.steward],
+    ["Address",t.addr],
+    ["Phone",'<a href="tel:'+t.phone+'">'+t.phone+"</a>"]];
+  if(t.co) rows.push(["Co-sponsor",t.co+(t.co_phone?" · "+t.co_phone:"")]);
+  rows.push(["Public launches",t.access+" on this reach"]);
+  rows.push(["Guide",'<a href="'+t.url+'" target="_blank" rel="noopener">'+
+    t.url.split("//").pop().split("/")[0].replace("www.","")+"</a>"]);
+  rows.push(["Source of mapped reach",t.basis]);
+  select(t.name,rows);
+}
+
+function selNoSteward(g){
+  select("No mapped water trail",
+    [["Reach","RM "+g.hi.toFixed(1)+"–"+g.lo.toFixed(1)+
+      " · "+g.mi.toFixed(0)+" mi"]],
+    "This reach lies outside the designated and promoted water trails shown in the atlas.");
+}
+
+function stopStatus(status){
+  if(status.startsWith("NO LEGAL")) return "No public campsite identified at this stop.";
+  if(status.startsWith("SENECA")) return "Check camping permission with the Seneca Nation.";
+  if(status==="legal dispersed camping") return "Mapped as allowing dispersed camping. Check current rules and access.";
+  if(status==="trip terminus") return "End of the sample itinerary";
+  return status;
+}
+
+function selStop(st){
+  const c=D.counties.find(c=>st.rm<=c.hi&&st.rm>=c.lo);
+  select(`Itinerary stop ${st.day} · RM ${st.rm.toFixed(2)}`,
+    [["Stop",st.name],["Travel that day",st.miles.toFixed(2)+" mi · "+st.seg],
+     ["Land",st.desig],["County",c?c.name+" ("+c.state.slice(0,2)+")":"—"],
+     ["Coordinates",st.lat.toFixed(5)+", "+st.lon.toFixed(5)]],
+    stopStatus(st.status));
+}
+
+/* ---------- river mile strip ---------- */
+const SHORT_STEWARD={
+  "Cattaraugus County Tourism (Enchanted Mountains of Western New York)":
+    "Cattaraugus County Tourism",
+  "USDA Forest Service - Allegheny National Forest":"Allegheny National Forest",
+  "Experience Armstrong, Inc.":"Experience Armstrong"};
+const ss=document.getElementById("stripsvg");
+let SW=1000, ROW=13, GAPR=5;
+function stripDraw(){
+  const cw=document.querySelector(".stripscroll").clientWidth||1000;
+  SW=Math.max(cw,620); ROW=SW<760?15:13;
+  while(ss.firstChild) ss.removeChild(ss.firstChild);
+  const rmMax=M.start_rm, rmMin=M.end_rm;
+  const X=rm=>((rmMax-rm)/(rmMax-rmMin))*(SW-70)+52;
+  const rows=[["Mode",0],["Camping",1],["Steward",2],["County",3]];
+  const H=18+rows.length*(ROW+GAPR)+30;
+  ss.setAttribute("viewBox",`0 0 ${SW} ${H}`);
+  ss.setAttribute("width",SW);
+  ss.setAttribute("height",H);
+  ss.style.height=H+"px";
+
+  const lbl=(y,t)=>{const e=el("text",{x:0,y:y+ROW-3,"font-size":10,
+    fill:"var(--ink-3)","font-weight":500}); e.textContent=t;
+    ss.appendChild(e);};
+
+  /* mode band */
+  let y=14; lbl(y,"Mode");
+  D.river.forEach(sg=>{
+    ss.appendChild(el("rect",{x:X(sg.rm_hi),y:y,
+      width:Math.max(X(sg.rm_lo)-X(sg.rm_hi),1),height:ROW,
+      fill:MODE_COLOR[sg.mode],rx:1}));
+  });
+
+  /* camping band */
+  y+=ROW+GAPR; lbl(y,"Camping");
+  ss.appendChild(el("rect",{x:X(rmMax),y:y,width:X(rmMin)-X(rmMax),
+    height:ROW,fill:"var(--none)","fill-opacity":.32,rx:1}));
+  D.tribal.forEach(t=>ss.appendChild(el("rect",{x:X(t.hi),y:y,
+    width:Math.max(X(t.lo)-X(t.hi),1),height:ROW,fill:"var(--tribal)",
+    "fill-opacity":.65})));
+  D.camp_ok.forEach(c=>{
+    const r=el("rect",{x:X(c.hi),y:y,width:Math.max(X(c.lo)-X(c.hi),1.2),
+      height:ROW,fill:"var(--ok)"});
+    r.addEventListener("pointerenter",e=>showTipStrip(e,
+      `<b>${c.name}</b><br>${c.desig}<br>RM ${c.hi.toFixed(2)}–${c.lo.toFixed(2)}`));
+    r.addEventListener("pointerleave",hideTip);
+    ss.appendChild(r);});
+  D.camps.forEach(c=>ss.appendChild(el("rect",{x:X(c.rm)-0.8,y:y+ROW-4,
+    width:1.6,height:4,fill:"var(--desig)"})));
+
+  /* water-trail steward band */
+  y+=ROW+GAPR; lbl(y,"Steward");
+  ss.appendChild(el("rect",{x:X(rmMax),y:y,width:X(rmMin)-X(rmMax),
+    height:ROW,fill:"var(--none)","fill-opacity":.20,rx:1}));
+  D.trail_gaps.forEach(g=>{
+    const r=el("rect",{x:X(g.hi),y:y,width:Math.max(X(g.lo)-X(g.hi),1),
+      height:ROW,fill:"transparent",class:"pin"});
+    r.addEventListener("pointerenter",e=>showTipStrip(e,
+      `<b>No mapped water trail</b><br>RM ${g.hi.toFixed(1)}–${g.lo.toFixed(1)} · ${g.mi.toFixed(0)} mi`));
+    r.addEventListener("pointerleave",hideTip);
+    r.addEventListener("click",()=>selNoSteward(g));
+    ss.appendChild(r);});
+  D.trails.forEach(t=>{
+    const x0=X(t.hi), x1=X(t.lo);
+    const r=el("rect",{x:x0,y:y,width:Math.max(x1-x0,1.2),height:ROW,
+      fill:"var(--trail)","fill-opacity":t.designated?1:.42,class:"pin"});
+    r.addEventListener("pointerenter",e=>showTipStrip(e,
+      `<b>${t.steward}</b><br>${t.name}<br>${t.phone}`));
+    r.addEventListener("pointerleave",hideTip);
+    r.addEventListener("click",()=>selTrail(t));
+    ss.appendChild(r);
+    const lab=SHORT_STEWARD[t.steward]||t.steward;
+    if(x1-x0>lab.length*5.0+8){
+      const e=el("text",{x:(x0+x1)/2,y:y+ROW-3.5,"font-size":9,
+        fill:"#fff","text-anchor":"middle","pointer-events":"none"});
+      e.textContent=lab; ss.appendChild(e);}
+  });
+
+  /* county band */
+  y+=ROW+GAPR; lbl(y,"County");
+  D.counties.forEach((c,i)=>{
+    const x0=X(Math.min(c.hi,rmMax)), x1=X(Math.max(c.lo,rmMin));
+    ss.appendChild(el("rect",{x:x0,y:y,width:Math.max(x1-x0,1),height:ROW,
+      fill:i%2?"var(--rule)":"var(--rule-2)",stroke:"var(--panel)",
+      "stroke-width":.7}));
+    if(x1-x0>42){const t=el("text",{x:(x0+x1)/2,y:y+ROW-3.5,"font-size":9,
+      fill:"var(--ink-2)","text-anchor":"middle"});
+      t.textContent=c.name; ss.appendChild(t);}
+  });
+
+  /* nights + axis */
+  y+=ROW+GAPR+2;
+  if(vis.stops) D.stops.forEach(st=>{
+    const f=/SENECA/.test(st.status)?"var(--tribal)":
+      /NO LEGAL/.test(st.status)?"var(--none)":
+      /unverified/.test(st.status)?"var(--wade)":"var(--ok)";
+    const g=el("circle",{cx:X(st.rm),cy:y+4,r:4.2,fill:f,
+      stroke:"var(--panel)","stroke-width":1.2,class:"pin"});
+    g.addEventListener("pointerenter",e=>showTipStrip(e,
+      `<b>Itinerary stop ${st.day}</b> · RM ${st.rm.toFixed(2)}<br>${st.name}`));
+    g.addEventListener("pointerleave",hideTip);
+    g.addEventListener("click",()=>selStop(st));
+    ss.appendChild(g);
+  });
+  for(let rm=Math.floor(rmMax/25)*25; rm>=0; rm-=25){
+    if(rm>rmMax) continue;
+    ss.appendChild(el("line",{x1:X(rm),y1:y+11,x2:X(rm),y2:y+15,
+      stroke:"var(--ink-3)","stroke-width":.8}));
+    const t=el("text",{x:X(rm),y:y+24,"font-size":9,fill:"var(--ink-3)",
+      "text-anchor":"middle","font-family":"IBM Plex Mono, monospace"});
+    t.textContent=rm; ss.appendChild(t);
+  }
+  D.barriers.forEach(b=>{
+    ss.appendChild(el("line",{x1:X(b.rm),y1:14,x2:X(b.rm),y2:y+8,
+      stroke:"var(--none)","stroke-width":b.kind==="dam_portage"?1.4:.7,
+      "stroke-dasharray":b.kind==="dam_portage"?"":"2 2","stroke-opacity":.8}));
+  });
+}
+const stripBox=document.querySelector(".strip");
+function showTipStrip(e,html){
+  tip.innerHTML=html; tip.hidden=false;
+  const r=box.getBoundingClientRect();
+  tip.style.left=Math.max(Math.min(e.clientX-r.left,r.width-240),4)+"px";
+  tip.style.top=Math.max(r.height-92,4)+"px";
+}
+
+addEventListener("resize",()=>{fit(); stripDraw();});
+fit(); stripDraw();
+</script>
+
+</body>
+</html>

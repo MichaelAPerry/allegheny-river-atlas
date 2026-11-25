@@ -63,6 +63,10 @@ h2{font-size:11px;font-weight:600;margin:0;text-transform:uppercase;
   overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;
   gap:16px}
 .mapbox{position:relative;overflow:hidden;background:var(--ground)}
+.map-credit,.map-status{position:absolute;background:var(--panel);
+  color:var(--ink);font-size:11px;padding:2px 6px}
+.map-credit{right:0;bottom:0}
+.map-status{left:8px;bottom:8px;border-radius:4px}
 svg{display:block;width:100%;height:100%;touch-action:none}
 .strip{grid-column:1/-1;border-top:1px solid var(--rule);
   background:var(--panel);padding:10px 16px 12px}
@@ -135,6 +139,7 @@ button.zoom:focus-visible,.layers label:focus-within{outline:2px solid var(--wat
     </div>
     <details open>
       <summary>About and sources</summary>
+      <p>The map is fully usable offline and shows the OpenStreetMap basemap when online.</p>
       <p>Drag to pan. Use the zoom buttons and layer checkboxes to explore the map. The chart runs downstream from left to right. Scroll sideways on a small screen.</p>
       <p>Green in the camping row marks public frontage classified for dispersed camping. Tan marks Seneca Nation territory. Small blue ticks mark mapped campgrounds. Other reaches have no mapped public dispersed camping in this atlas.</p>
       <p><strong>This is not legal advice. Check current regulations, access and permits with the land manager or the Seneca Nation before camping.</strong></p>
@@ -149,6 +154,8 @@ button.zoom:focus-visible,.layers label:focus-within{outline:2px solid var(--wat
 
   <div class="mapbox" id="mapbox">
     <svg id="map" role="img" aria-label="Route map of the Allegheny River from Coudersport to Pittsburgh"></svg>
+    <a class="map-credit" id="map-credit" href="https://www.openstreetmap.org/copyright" hidden>© OpenStreetMap contributors</a>
+    <span class="map-status" id="map-status" role="status" hidden>Offline: basemap unavailable</span>
     <button class="zoom" id="zin" aria-label="Zoom in">+</button>
     <button class="zoom" id="zout" aria-label="Zoom out">&minus;</button>
     <button class="zoom" id="zrst" aria-label="Reset view">fit</button>
@@ -168,12 +175,13 @@ const SVGNS = "http://www.w3.org/2000/svg";
 const el = (n,a={})=>{const e=document.createElementNS(SVGNS,n);
   for(const k in a) e.setAttribute(k,a[k]); return e;};
 
-/* ---------- projection: equirectangular scaled by mean latitude ---------- */
-let all=[];
-D.river.forEach(s=>all.push(...s.coords));
-const lat0 = all.reduce((a,c)=>a+c[1],0)/all.length;
-const kx = Math.cos(lat0*Math.PI/180);
-const PX = p => [p[0]*kx, -p[1]];
+/* ---------- Web Mercator (EPSG:3857) in normalized tile coordinates ---------- */
+const MAX_LAT=85.0511287798066;
+const PX=([lon,lat])=>{
+  const phi=Math.max(-MAX_LAT,Math.min(MAX_LAT,lat))*Math.PI/180;
+  return [(lon+180)/360,(1-Math.asinh(Math.tan(phi))/Math.PI)/2];
+};
+const all=D.river.flatMap(s=>s.coords);
 let bb;
 { const xs=all.map(p=>PX(p)[0]), ys=all.map(p=>PX(p)[1]);
   bb={x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; }
@@ -189,6 +197,7 @@ const LAND_FILL={"National Forest":"var(--land-nf)",
   "Tribal Territory":"var(--land-trib)"};
 
 const LAYERS=[
+  {id:"basemap",label:"OpenStreetMap basemap",on:true,sw:"var(--water-2)"},
   {id:"land",  label:"Public land",        on:true,  sw:"var(--land-nf)"},
   {id:"tribal",label:"Seneca Allegany Territory",on:true,sw:"var(--land-trib)"},
   {id:"river", label:"River by estimated travel mode",    on:true,  sw:"var(--water)"},
@@ -218,7 +227,9 @@ LAYERS.forEach(l=>{
   lb.innerHTML=`<input type="checkbox" id="${id}" ${l.on?"checked":""}>
     <span class="sw" style="background:${l.sw}"></span><span>${l.label}</span>`;
   lb.querySelector("input").addEventListener("change",e=>{
-    vis[l.id]=e.target.checked; draw();
+    vis[l.id]=e.target.checked;
+    if(l.id==="basemap"){tileFailed=false; updateBasemap();}
+    else draw();
     if(l.id==="stops") stripDraw();});
   lay.appendChild(lb);
 });
@@ -236,6 +247,87 @@ document.getElementById("modelegend").innerHTML=
 /* ---------- map ---------- */
 const svg=document.getElementById("map"), box=document.getElementById("mapbox");
 let view={x:bb.x0,y:bb.y0,w:BW,h:BH};
+const tileGroup=el("g",{"pointer-events":"none","aria-hidden":"true"});
+svg.appendChild(tileGroup);
+const credit=document.getElementById("map-credit");
+const status=document.getElementById("map-status");
+const visibleTiles=new Map(), tileCache=new Map();
+const CACHE_LIMIT=128;
+let tileFailed=false, tileTimer;
+
+function tileCoverage(v,width){
+  const z=Math.min(19,Math.max(0,Math.round(Math.log2(width/(256*v.w)))));
+  const n=2**z;
+  return {
+    z,n,
+    x0:Math.max(0,Math.floor(v.x*n)),
+    x1:Math.min(n,Math.ceil((v.x+v.w)*n)),
+    y0:Math.max(0,Math.floor(v.y*n)),
+    y1:Math.min(n,Math.ceil((v.y+v.h)*n))
+  };
+}
+
+function updateBasemap(){
+  clearTimeout(tileTimer);
+  const unavailable=!navigator.onLine||tileFailed;
+  status.hidden=!vis.basemap||!unavailable;
+  const width=box.clientWidth;
+  const wanted=new Set();
+  let coverage;
+  if(vis.basemap&&!unavailable&&width>0){
+    coverage=tileCoverage(view,width);
+    const {z,x0,x1,y0,y1}=coverage;
+    for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) wanted.add(`${z}/${x}/${y}`);
+  }
+
+  for(const [key,tile] of visibleTiles){
+    if(wanted.has(key)) continue;
+    tile.image.remove();
+    visibleTiles.delete(key);
+    if(tile.loaded){
+      tileCache.set(key,tile);
+      if(tileCache.size>CACHE_LIMIT) tileCache.delete(tileCache.keys().next().value);
+    }
+  }
+  credit.hidden=wanted.size===0;
+  if(!coverage) return;
+
+  // Reuse images immediately. Request missing tiles once the view settles.
+  const missing=[];
+  for(const key of wanted){
+    if(visibleTiles.has(key)) continue;
+    const cached=tileCache.get(key);
+    if(cached){
+      tileCache.delete(key);
+      visibleTiles.set(key,cached);
+      tileGroup.appendChild(cached.image);
+    }else missing.push(key);
+  }
+  if(missing.length){
+    tileTimer=setTimeout(()=>{
+      for(const key of missing) loadTile(key,coverage.n);
+    },120);
+  }
+}
+
+function loadTile(key,n){
+  const [,x,y]=key.split("/").map(Number);
+  const image=el("image",{x:x/n,y:y/n,width:1/n,height:1/n});
+  const tile={image,loaded:false};
+  image.addEventListener("load",()=>{tile.loaded=true;},{once:true});
+  image.addEventListener("error",()=>{
+    if(visibleTiles.get(key)!==tile) return;
+    tileFailed=true;
+    updateBasemap();
+  },{once:true});
+  visibleTiles.set(key,tile);
+  tileGroup.appendChild(image);
+  image.setAttribute("href",`https://tile.openstreetmap.org/${key}.png`);
+}
+
+addEventListener("offline",updateBasemap);
+addEventListener("online",()=>{tileFailed=false; updateBasemap();});
+
 function fit(){
   const r=box.getBoundingClientRect();
   const ar=r.width/Math.max(r.height,1), br=BW/BH;
@@ -245,7 +337,7 @@ function fit(){
   apply();
 }
 function apply(){svg.setAttribute("viewBox",
-  `${view.x} ${view.y} ${view.w} ${view.h}`); draw();}
+  `${view.x} ${view.y} ${view.w} ${view.h}`); updateBasemap(); draw();}
 function zoom(f,cx,cy){
   const r=box.getBoundingClientRect();
   cx=cx??view.x+view.w/2; cy=cy??view.y+view.h/2;
@@ -262,7 +354,7 @@ const toUser=(e,v=view)=>{const r=box.getBoundingClientRect();
   return [v.x+(e.clientX-r.left)/r.width*v.w,
           v.y+(e.clientY-r.top)/r.height*v.h];};
 box.addEventListener("pointerdown",e=>{
-  if(e.target.closest(".pin, button")) return;
+  if(e.target.closest(".pin, button, a")) return;
   drag={p:toUser(e),v:{...view}};
   box.setPointerCapture(e.pointerId);});
 box.addEventListener("pointermove",e=>{
@@ -291,7 +383,7 @@ function select(title,rows,note){
 }
 
 function draw(){
-  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  while(svg.lastChild!==tileGroup) svg.lastChild.remove();
   const s=view.w/BW;                    /* scale factor: 1 = fitted */
   const u=view.w/1000;                  /* one "pixel" in user units */
 

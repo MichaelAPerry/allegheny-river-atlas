@@ -468,7 +468,7 @@ __STEWARDS__
   <p class="fine">The GeoPackage contains 22 spatial layers and a metadata table. River miles increase upstream from mile 0 at the mouth in Pittsburgh. The data dictionary describes the USGS centerline, mileage checks and sources.</p>
   <div class="dl">
     <a class="btn" href="map.html"><b>Offline river map</b>
-      <span>Save the HTML file and open it in a browser</span></a>
+      <span>Save the HTML file and open it in a browser. Fully usable offline, with the OpenStreetMap basemap when online.</span></a>
     <a class="btn" href="allegheny_river_atlas.gpkg" download>
       <b>GeoPackage</b><span>__SIZE__ MB · opens in QGIS</span></a>
     <a class="btn" href="DATA_DICTIONARY.md"><b>Data dictionary</b>

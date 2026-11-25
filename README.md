@@ -5,7 +5,7 @@ The Allegheny River Atlas is an open GIS dataset covering the river from its hea
 ## Use the maps
 
 - [Paddling the Allegheny](https://michaelaperry.github.io/allegheny-river-atlas/) is the online trip map, starting at Coudersport. Search for a town, launch, campground, or river mile. Select a feature for details. The basemap and current USGS gage readings require a connection.
-- [Offline river map](https://michaelaperry.github.io/allegheny-river-atlas/map.html) shows selected atlas layers. Save `map.html` and open it in a browser. Drag to pan, use the zoom buttons, and use the layer checkboxes to choose what to display. Select a marker or a trail segment for details. The map works from that one file. Links to guides and downloads require a connection.
+- [Offline river map](https://michaelaperry.github.io/allegheny-river-atlas/map.html) shows selected atlas layers. Save `map.html` and open it in a browser. Drag to pan, use the zoom buttons, and use the layer checkboxes to choose what to display. Select a marker or a trail segment for details. The map is fully usable offline and shows the OpenStreetMap basemap when online. Links to guides and downloads require a connection.
 
 [Report a missing launch or a correction](https://github.com/MichaelAPerry/allegheny-river-atlas/issues/new?title=Launch%20or%20correction). A road name and town or coordinates will help me locate it.
 

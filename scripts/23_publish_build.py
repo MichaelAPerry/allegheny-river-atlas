@@ -18,6 +18,7 @@ import common
 import config
 
 DOCS = config.ROOT / "docs"
+MAP_TEMPLATE = Path(__file__).with_name("map_template.html")
 SRC_GPKG = config.OUT / "allegheny_river_atlas.gpkg"
 PUB_GPKG = DOCS / "allegheny_river_atlas.gpkg"
 REDACT = {"owner", "owner_address"}
@@ -70,7 +71,7 @@ def main() -> None:
 
     shutil.copy(config.OUT / "DATA_DICTIONARY.md", DOCS / "DATA_DICTIONARY.md")
 
-    # Refresh the data in the checked-in offline map presentation.
+    # Render the public presentation with the upstream map's data.
     payload_pattern = re.compile(r"^const D = (.*);$", re.MULTILINE)
     generated_map = (config.OUT / "map.html").read_text(encoding="utf-8")
     payload_match = payload_pattern.search(generated_map)
@@ -81,11 +82,12 @@ def main() -> None:
         trail.pop("email", None)
 
     map_path = DOCS / "map.html"
-    map_html = map_path.read_text(encoding="utf-8")
+    map_html = MAP_TEMPLATE.read_text(encoding="utf-8")
     data_line = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace(
         "<", r"\u003c")
-    map_html, replaced = payload_pattern.subn(
-        lambda _: f"const D = {data_line};", map_html)
+    map_html, replaced = re.subn(
+        r"^const D = __ATLAS_DATA__;$", lambda _: f"const D = {data_line};",
+        map_html, flags=re.MULTILINE)
     if replaced != 1:
         raise ValueError("Expected one embedded data block in the public map")
     map_path.write_text(map_html, encoding="utf-8")
